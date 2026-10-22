@@ -1,8 +1,8 @@
 # 2026-10-21 Paper Reading
 
-本日精读对应[日报](../../../news/2026-10-21.md)：四篇必读论文与雷达最高分SceneRig。日报在22日凌晨补做，22日08:30补检后官方可访问列表/RSS仍停在21日批次，其他官方接口超时；下一批投稿覆盖仍未完成，已有本版不代表可以跳过后续补查。五篇已完成精读的正文和图片本轮未改动，已逐文件核对原保存SHA-256。
+本日精读对应[日报](../../../news/2026-10-21.md)。22日上午通过官方月列表补齐后续投稿后，五篇必读为SuperMimic、COWBOY、PhysCanvas、UniWALM、SpatialDex；雷达最高分AdaDex已完成精读，另保留本期早先完成的SceneRig。
 
-共五篇笔记已完成，17 张图片 materialized / 3 处 placeholder。占位保留图像质量边界，正文分析与相关全文证据已核验。
+共七篇笔记已完成，23张图片materialized / 8处placeholder。新增两篇均通过Grounding Lint、Final Note Lint全部8项、Final Quality Review、Final Readability Review与正式保存SHA校验；原五篇正文与图片逐文件SHA-256保持不变。占位保留提取与裁剪的质量边界，相关全文结果已核实。机构/会议动态页面等来源仍有覆盖限制，详见日报。
 
 ## SuperMimic: Scaling Humanoid Whole-Body Control with One Differentiable World Model
 
@@ -54,4 +54,24 @@
 - 质量：Grounding Lint、Final Note Lint（8项）、Final Quality Review、Final Readability Review全部通过。
 - SHA-256：`776f1f4b72bf7e71be0ef666ab8014c1410b82cdd6851fffd249766cd37c2e24`；正式保存笔记与最后一次lint字节一致，图片与已审查SHA-256一致。
 
-以上是论文全文与图像核查，不代表完成模型训练、仿真或真实机器人独立复现。动态机构和会议来源覆盖不完整，详见日报说明。
+## Reconstruction-Augmented Visuomotor Pre-Training of 3D-Grounded Bimanual Dexterity from RGB-Only Human Videos
+
+- 论文：[arXiv:2610.29716v1](https://arxiv.org/abs/2610.29716)
+- 笔记：[spatialdex/spatialdex.md](spatialdex/spatialdex.md)
+- 核心思想：视频级尺度统一手与场景，双门控几何融合和腕条件手指生成。
+- 代表图：[spatialdex/images/page_004_fig_fig_3_review.png](spatialdex/images/page_004_fig_fig_3_review.png)（方法总览，身份与300dpi视觉审查通过）
+- 状态：笔记已完成（2图materialized / 3 placeholder）。三张罗马编号结果表未获得独立匹配候选，保留占位与已核实结果。
+- 质量：Grounding Lint、Final Note Lint（8项）、Final Quality Review、Final Readability Review全部通过。
+- SHA-256：`af5bc3990e15e89702a643489ff753c976b7f0a3f97b1f6a3df03827c3e5dcea`；正式保存笔记与最后一次lint字节一致，图片与审查SHA-256一致。
+
+## COWBOY: A Scalable Sim-to-Real Framework for Learning Contextual Whole-Body Manipulation
+
+- 论文：[arXiv:2610.28948v1](https://arxiv.org/abs/2610.28948)
+- 笔记：[cowboy/cowboy.md](cowboy/cowboy.md)
+- 核心思想：向量化WBC与兼容局部专家生成教师，部分点云DAgger蒸馏单一全身策略。
+- 代表图：[cowboy/images/page_006_fig_figure_4_review_repair1.png](cowboy/images/page_006_fig_figure_4_review_repair1.png)（方法总览，身份与300dpi视觉审查通过）
+- 状态：笔记已完成（4图materialized / 2 placeholder）。表3无独立候选；表4唯一修复后仍有外部表题碎片，保留两处占位。
+- 质量：Grounding Lint、Final Note Lint（8项）、Final Quality Review、Final Readability Review全部通过。
+- SHA-256：`e523abd2dadf660d5c4f0234ac91f9432c82048a38191005e136369aabcfd595`；正式保存笔记与最后一次lint字节一致，图片与审查SHA-256一致。
+
+以上是论文全文与图像核查，不代表独立模型训练、仿真或真实机器人复现。
