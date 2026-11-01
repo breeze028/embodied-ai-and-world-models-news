@@ -2,251 +2,262 @@
 
 > 具身智能与世界模型每日研究动态与论文精读。
 
-**最新一期：2026-10-30** ｜ [日报原文](news/2026-10-30.md) · [精读索引](paper-reading/news/2026-10-30/README.md) · [历史归档](#历史归档)
+**最新一期：2026-10-31** ｜ [日报原文](news/2026-10-31.md) · [精读索引](paper-reading/news/2026-10-31/README.md) · [历史归档](#历史归档)
 
 ---
 
-<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-10-30.md 自动镜像，请勿手工编辑 -->
+<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-10-31.md 自动镜像，请勿手工编辑 -->
 
-## 2026-10-30 Embodied AI & World Models Daily
+## 2026-10-31 Embodied AI & World Models Daily
 
 > 面向具身智能 / Robotics 研究员与工程师的研究与工程资讯。
-> 主窗口：北京时间 2026-10-30 00:00–23:59；补充窗口：10-28 00:00 至 10-29 23:59。论文按 v1 实际提交时间换算，不以公告日期归属。
-> **来源检查不完整（主窗口）：** 运行时 arXiv 最新公告批次为 2026-10-30，按实际提交时间只覆盖到北京时间 10-30 01:59；10-30 02:00–23:59 的投稿尚未公告，recent 列表与 API 均查不到。因此本期不能断言 10-30 全天无资讯。以下条目除标注「主窗口」者外均来自 48 小时补充窗口，逐条给出实际提交时间；与 10-28、10-29 两期重复的条目已在筛选记录中说明并去重。
+> 主窗口：北京时间 2026-10-31 00:00–23:59；补充窗口：2026-10-29 00:00 至 2026-10-30 23:59。
+> **来源检查不完整（主窗口）：** 2026-10-31 为周六，arXiv 最新可见公告批次仍为 2026-10-30，按 v1 实际提交时间最晚只到北京时间 10-30 01:59；10-31 当天及 10-30 02:00 之后的投稿尚未公告，recent 列表、`/new` 页与 API 均查不到，因此本期不能断言 10-31 全天无资讯。以下条目全部来自 48 小时补充窗口，且均为 10-29、10-30 两期日报未刊载的内容；每条标注实际提交时间，不与前两期重复计数。
 
 ### 🔥 今日必读
 
-#### 1. 【数据与Benchmark】TouchBridge：用触觉把人的接触搬到机器人指尖
+#### 1. 【世界模型】WorldFlow：把 3D 位移做成寄生在视频网格上的词元
 
-**来源：** [arXiv:2610.40349v1](https://arxiv.org/abs/2610.40349)（清华大学、浙江大学、南洋理工大学等；cs.RO）  
+**来源：** [arXiv:2610.39278v1](https://arxiv.org/abs/2610.39278)（RoboScience、新加坡国立大学；cs.CV/cs.RO/cs.LG）  
 **类型：** Paper，research_paper 权重  
-**发布时间：** 2026-10-30 00:06 北京时间（主窗口）  
-**评分：** 79.5/100（T1；独立双评 80.0、79.0）  
-**关键词：** Tactile Retargeting · Human-to-Robot Transfer · GR00T N1.7
+**发布时间：** 2026-10-29 11:30 北京时间（补充窗口）  
+**评分：** 84.0/100（T1；独立双评 85.0、83.0）  
+**关键词：** World Model · 3D Motion Forecasting · Mixture-of-Transformers
 
 **一句话：**  
-用测量到的指尖接触而不是指尖位姿做跨本体对应：先对齐人机两侧的腕相机与指尖触觉布局，再把"接触块中心 + 活跃 taxel + 多指接触图"写进重定向优化，转换出的人类示教微调 GR00T N1.7 后，在四个真机接触任务上达到 72.5%，接近等量遥操作数据的 77.5%，而采集速度快 7.0 倍。
+给定一帧观测、一句指令和一组 3D 查询点，用一个共享 MoT 同时去噪未来视频与查询点的逐帧 3D 位移；在 1,438,379 个对象片段上训练后，SpatialCog 的 ADE 为 0.060 m，比最强外部基线低 54.2%，真机 12 个任务的执行成功率从 µ0 的 4/36 提到 24/36。
 
-![TouchBridge Tac-Retarget 三项约束](paper-reading/news/2026-10-30/touchbridge/images/page_004_fig_fig_3.png)
-*经视觉审查的方法图 3；接触中心公式、接触图消融与完整数字见[精读笔记](paper-reading/news/2026-10-30/touchbridge/touchbridge.md)。*
+![WorldFlow 方法总览](paper-reading/news/2026-10-31/worldflow/images/page_005_fig_figure_2_review.png)
+*经视觉审查的方法图 2；时空对齐、联合整流流与完整消融见[精读笔记](paper-reading/news/2026-10-31/worldflow/worldflow.md)。*
 
 **技术要点：**
 
-- 硬件对齐：TouchBridge-Cap 用 D455 自我中心相机、两个腕相机、Manus 手套（130 Hz）与每指尖一枚 PaXini 触觉阵列（90 Hz）；机器人侧用同款触觉与几何定制的腕相机支架，使人机观测处在可比坐标系下。
-- 重定向目标由姿态项、接触项、接触图项与正则项组成。关键实现是接触时把姿态跟踪权重压到非接触时的 0.15 倍（$\eta=0.05$），让触觉项压过运动学项；接触中心按触觉响应加权，接触图用距离加权 Laplacian 保持多指接触的相对布局。
-- 全程不需要物体网格、物体位姿或物理仿真；视觉侧用 SAM 2 分割人手、ProPainter 修补背景、再渲染机器人手网格，动作按 UMI 方式锚定到动作块起始帧。
-- 四个真机任务（翻书页、拧灯泡、挤酱、夹蛋卷）各 60 条人类与 60 条遥操作示教，每策略 20 次试验：人类数据 72.5% 对遥操作 77.5%，翻书页持平；采集 11.7 秒对 81.7 秒。
-- 接触误差（Isaac Sim 回放）4.667 mm，DexPilot 6.354 mm、UniDex 7.715 mm；去掉接触图 6.659 mm、去掉接触对齐 7.071 mm、纯运动学 7.540 mm，对应真机成功率 48.8%、43.8%、38.8%。从零训练的 GR00T N1.7 只有 6.2%，说明方法高度依赖预训练。
+- 位移按域特定标量归一化后，与查询点的绝对位置、相对质心位置一起编码成连续 token，并用与视频 token 相同的 RoPE 坐标钉在初始图像 patch 上；这是跨模态对齐的核心。
+- 视频与几何共享一次整流流去噪，损失分别计算但共享噪声水平；三项辅助损失只作用在由预测速度场重建的 clean flow 上，按 $1-\sigma$ 加权。
+- 数据来自 Sim7、Real3、SpatialCog 与 MolmoMotion-1M，49 帧、16 FPS、64 个查询点；64 张 H800 训练，两阶段 32,000 + 51,100 步。
+- 主结果：Sim7/Real3/SpatialCog 的 ADE 为 0.051/0.081/0.060，FDE 0.094/0.113/0.078；相对 flow-only 变体 ADE 降 48.5%/19.8%/55.9%。
+- 真机用 7 自由度 xArm、XHand 与 ZED Mini，Qwen3.8-27B 选目标、T(R,O) Grasp 抓取、局部刚体拟合出轨迹；12 任务 × 3 次，flow 预测 35/36、执行 24/36。
 
 **为什么值得关注：**  
-它把"人类示教能不能替代遥操作"这个老问题推进到接触层面：不是让指尖位姿更像，而是让接触位置与接触之间的结构更像。0.15 倍的接触期跟踪权重是一个几乎零成本、可直接搬到自己重定向管线里的实现技巧。边界也清楚：触觉只用于重定向、不进入策略，全部实验在同一台 Moz1 加 Wuji 手上完成。
+它把"几何量如何寄生在视频 token 坐标系里"做成可复用的接口，让 3D 预测同时吃到视频预训练的稠密先验，推理时又不必跑跟踪器。边界同样清楚：查询点仍需预定义，Real3 只比最强基线低 4.7%、PWT 还输给 Cosmos3-Nano+4RC，且没有推理延迟数据。
 
-**资源：** [论文](https://arxiv.org/abs/2610.40349) · [项目页](https://touchbridge2026.github.io/) · [精读](paper-reading/news/2026-10-30/touchbridge/touchbridge.md)。本次未确认公开代码或权重。
+**资源：** [论文](https://arxiv.org/abs/2610.39278) · [项目页](https://worldflow-rbs.github.io/) · [代码](https://github.com/worldflow-rbs/worldflow) · [精读](paper-reading/news/2026-10-31/worldflow/worldflow.md)
 
 ---
 
-#### 2. 【操作与抓取】SwapBot：把家用工具变成带触觉的可换末端执行器
+#### 2. 【世界模型】Utility-WAM：未来条件带来的不是均匀增益，而是集中崩塌
 
-**来源：** [arXiv:2610.40646v1](https://arxiv.org/abs/2610.40646)（University of Washington；cs.RO）  
+**来源：** [arXiv:2610.39367v1](https://arxiv.org/abs/2610.39367)（华为；cs.RO）  
 **类型：** Paper，research_paper 权重  
-**发布时间：** 2026-10-30 01:59 北京时间（主窗口）  
-**评分：** 77.5/100（T1；独立双评 78.0、77.0）  
-**关键词：** Tool Use · Tactile Sensing · Diffusion Policy
+**发布时间：** 2026-10-29 12:59 北京时间（补充窗口）  
+**评分：** 83.0/100（T1；独立双评 84.0、82.0）  
+**关键词：** World Action Model · Negative Transfer · Residual Adapter
 
 **一句话：**  
-机器人侧只留一个自对准电磁耦合接口，工具侧用约 10 美元的 3D 打印适配器把刀、刷子、夹子、筷子变成带压阻触觉的末端执行器，约 10 秒完成换装；再用分层策略（工具选择器 + 工具专用扩散策略）完成刷酱、夹豆腐、切割，触觉让三个技能分别达到 85%、70%、90%，比 RGB-only 高 15 到 25 点。
+在同一 Stage-1 检查点上，未来条件让 LIBERO 平均 +0.8、RoboTwin 平均 -0.8，但 50 个任务里有 21 个变差、最差两个掉 54.0 与 34.0 点；冻结 WAM 后加一个残差适配器把这两个损失收窄到 6.0 与 14.0，再用配对结果学门控，RoboTwin 只对 24.5% 的查询生成视频，延迟降 38%，平均升到 93.3%。
 
-![SwapBot 系统与工具侧传感器结构](paper-reading/news/2026-10-30/swapbot/images/page_003_fig_fig_2_review.png)
-*经视觉审查的系统图 2；电极尺寸标定、分层策略与完整消融见[精读笔记](paper-reading/news/2026-10-30/swapbot/swapbot.md)。*
+![Utility-WAM 三阶段总览](paper-reading/news/2026-10-31/utility-wam/images/page_004_fig_figure_1_review.png)
+*经视觉审查的方法图 1；δ* 构造、三项损失与真机结果见[精读笔记](paper-reading/news/2026-10-31/utility-wam/utility-wam.md)。*
 
 **技术要点：**
 
-- 耦合设计：机器人侧电磁轮毂配运动学导向齿轮，允许小范围对准误差，保持力规格 50 N；工具侧 PLA/TPU 适配器加硅胶填充吸收手柄差异，铰接工具由末端关节经轴承传扭矩，无末端关节的 UR 系列补一个舵机。
-- 触觉是三明治压阻结构：Velostat 夹在正交导电布电极之间，$n\times n$ 阵列只需 $2n$ 根电极；标定显示大电极灵敏度高但会突跳并让 10-bit ADC 饱和，最终选 2 mm 宽度。
-- 遥操作主手与机器人工具同构，T265 给 6-DoF 位姿、双 IMU 解铰接开合，多视角 RGB、触觉、关节与动作以 20 Hz 同步；策略侧选择器用 ResNet+MLP 在自顶视图像与目标图上输出工具分布（测试集 96.8%），低层是条件于多视角 RGB、触觉与本体的 U-Net 扩散策略。
-- 每阶段 100 条示教、每策略 20 次试验、20 cm × 20 cm 工作区；整任务串联 60% 对 RGB-only 35%；仅触觉几乎学不会（10%–20%），自我中心视角最高只有 40%，说明触觉是补充而非替代视觉。
+- 用同检查点的两条注意力掩码路径构造反事实动作差 $\Delta a$，把"未来带来的改变"变成可测量的量；$\Delta J$ 是它在闭环成功率上的结果。
+- 适配器只修未来条件路径的速度：当真值未来比无未来路径好过一个 margin 时，目标修正取 $\delta^*=v_{GT}-v_{wo}$，否则取零；损失由动作项、对齐项与过误差项组成。
+- 门控标签是 $y=\mathbf 1[u_{\text{act}}>0]$，只用当前输入，因此可以在视频生成之前决定是否跳过想象。
+- 主结果：RoboTwin 91.1→92.8（Correction）→93.3（Selective），LIBERO 98.2→98.7→98.9；单独加过误差项反而低于只加对齐项，两项必须配对。
+- 真机三任务各 20 次：53/60（88.3%）对 FAST-WAM 43/60（71.7%），95% Newcombe 区间 [2.3, 30.4]。
 
 **为什么值得关注：**  
-它给出的是一条与"更大 VLA"不同的路线：不追求单一模型覆盖所有工具，而是让硬件与技能库承担多样性。最可复用的是"传感器随工具走到工具-物体界面"这个判断，以及用接触状态决定该信视觉还是该信触觉的工程直觉。作者承认的局限是传感器分辨率低、易磨损、布置靠直觉、任务分段需人工给定；跨机器人策略迁移与换装长期可靠性都没有定量证据。
+它给出了一个干净的实验范式：不争论"要不要世界模型"，而是用同检查点反事实测出"未来到底改了什么"，再针对性地修。需要保留的判断是：所有受控比较共用一个 Stage-1 检查点，门控标签是离线动作误差而非闭环回报，真机只有 60 次试验。
 
-**资源：** [论文](https://arxiv.org/abs/2610.40646) · [项目页](https://personalrobotics.github.io/SwapBot) · [精读](paper-reading/news/2026-10-30/swapbot/swapbot.md)。项目页称硬件指南稍后发布，本次未确认公开代码。
+**资源：** [论文](https://arxiv.org/abs/2610.39367) · [精读](paper-reading/news/2026-10-31/utility-wam/utility-wam.md)。本次未确认公开代码或项目页。
 
 ---
 
-#### 3. 【VLA与基础模型】PRIME W0：把世界模型子目标图异步接进流匹配 VLA
+#### 3. 【VLA与基础模型】CoRAct：把推理字段变成可验证的奖励
 
-**来源：** [arXiv:2610.39528v1](https://arxiv.org/abs/2610.39528)（LumosBot 等；cs.RO）  
+**来源：** [arXiv:2610.39543v1](https://arxiv.org/abs/2610.39543)（北京大学、北京人形机器人创新中心、中国人民大学等；cs.RO）  
 **类型：** Paper，research_paper 权重  
-**发布时间：** 2026-10-29 15:25 北京时间（补充窗口）  
-**评分：** 73.5/100（T1；独立双评 75.0、72.0）  
-**关键词：** World Model · Flow Matching · Mixture-of-Experts
+**发布时间：** 2026-10-29 15:44 北京时间（补充窗口）  
+**评分：** 78.0/100（T1；独立双评 79.0、77.0）  
+**关键词：** Embodied CoT · GRPO · Reasoning-Action Alignment
 
 **一句话：**  
-三条条件通路汇入一个流匹配动作专家：VLM 逐层 KV 交叉注意力、世界模型从上一帧预测的子目标 RGB 图（异步注入，不阻塞当前帧）、以及 DINOv2 编码的历史帧；动作在由示教协方差决定的噪声上做流匹配，LIBERO 平均 99.1%、自建真机五任务平均 78.1%。
+把具身思维链里的 movement 与 waypoint 改写成两项可计算奖励，在动作噪声空间用 GRPO 只优化一个 512 维噪声策略：VLABench 从无 CoT/无对齐的 39.2% 提到 51.8%，RoboCasa 从 68.6% 提到 75.5%，真机三任务为 56.6%/46.6%/63.3%。
 
-![PRIME W0 四阶段训练流程](paper-reading/news/2026-10-30/primew0/images/page_006_fig_figure_2_review.png)
-*经视觉审查的流程图 2；消融序列、缩放实验与证据边界见[精读笔记](paper-reading/news/2026-10-30/primew0/primew0.md)。*
+![CoRAct 框架](paper-reading/news/2026-10-31/coract/images/page_004_fig_fig_2_300dpi.png)
+*经视觉审查的框架图 2；奖励构造、逐级消融与真机协议见[精读笔记](paper-reading/news/2026-10-31/coract/coract.md)。*
 
 **技术要点：**
 
-- 逐层 KV 注入让动作头读到 VLM 所有层的 Key/Value，而不是一个池化向量；世界模型把预测解码成图像再用同一视觉编码器编码，复用 VLM 原生视觉接口。
-- 异步调度是关键工程点：子目标只依赖 $o_{t-1}$，可在采集当前帧时后台生成，端到端延迟约为 $\max(T_{\text{wm}},T_{\text{vision}})$。
-- 协方差噪声：用示教动作块的 $\hat\Sigma_a=LL^\top$ 采样 $\varepsilon=L\xi$，替代各向同性高斯；推理用 8 步 Euler 积分，动作块长度 $H$。
-- 四阶段训练：VLM 预训练 → DAT 离散动作词元 + NTP → 冻结 VLM 的流匹配预训练（含世界模型注入）→ 端到端 SFT；数据约 10,000 小时（遥操作 60%、UMI 30%、仿真 10%）。
-- 累积消融（LIBERO-Long / 真机）：OpenVLA 53.7/15.7 → DAT 61.2/22.4 → ADM 72.4/45.3 → MoE 81.6/58.2 → 历史帧 88.3/64.7 → 世界模型 93.5/71.4 → 协方差噪声 96.2/75.8 → SFT 98.6/78.1。子目标图与下一帧相似度同成功率的相关系数 0.79（OpenVLA 0.09）。
+- movement 由相对末端位姿与夹爪动作规则化，waypoint 由未来夹爪位置投影到相机画面；两者都不依赖额外语言模型打分，可批量构造。
+- 三专家 MoT 分别建模 ECoT、动作与动作条件未来图；未来预测流显式屏蔽 ECoT，防止图像专家从航点抄答案。
+- 对齐阶段冻结骨干与定位器，只更新条件噪声策略；奖励为运动误差的负加权和与航点指数奖励之和，组内均值做基线，不做方差归一化。
+- 逐级消融：39.2→44.3（Movement CoT）→47.5（Waypoint CoT）→49.3（Movement 对齐）→51.8（完整）；RoboCasa 对应 68.6→72.9→73.5→74.6→75.5。
+- 一致性指标：位置误差 0.401→0.171 cm，夹爪一致率 69.8%→91.8%，航点误差 5.998→0.542 px；真机三任务各 30 次。
 
 **为什么值得关注：**  
-它把"世界模型参与在线控制"做成了一个可部署的调度问题，而不是只把预测当离线数据。消融顺序也诚实：最大增益来自流匹配动作头加相位专家，世界模型是有效增量而非全部。需要保留的判断是：真机套件自建且未公开、LIBERO 已接近饱和、0.79 只是相关而非因果、装配任务 +24.1 点的跳变没有解释。
+它把"推理"从提示词变成了可核对的监督量。消融也诚实：只加 CoT 就有明显收益，显式对齐是增量而非全部；但论文没有"只加对齐、不加 CoT"的对照，且后果奖励依赖未来图预测与 Grounding DINO 定位器。
 
-**资源：** [论文](https://arxiv.org/abs/2610.39528) · [精读](paper-reading/news/2026-10-30/primew0/primew0.md)。本次未确认公开代码或权重。
+**资源：** [论文](https://arxiv.org/abs/2610.39543) · [项目页](https://onlyxingxingzyx.github.io/CoRAct/) · [精读](paper-reading/news/2026-10-31/coract/coract.md)。本次未确认公开代码。
 
 ---
 
-#### 4. 【强化学习】Event2Reward：奖励只需要相邻状态的序，不需要绝对进度
+#### 4. 【数据与Benchmark】WorldProbe：局部画面还好看，世界已经散了
 
-**来源：** [arXiv:2610.39212v1](https://arxiv.org/abs/2610.39212)（cs.RO；44 页含附录）  
+**来源：** [arXiv:2610.39721v1](https://arxiv.org/abs/2610.39721)（cs.CV；19 页）  
 **类型：** Paper，research_paper 权重  
-**发布时间：** 2026-10-29 10:34 北京时间（补充窗口）  
-**评分：** 73.0/100（T1；独立双评 74.0、72.0）  
-**关键词：** Reward Shaping · Progress Relations · Real-Robot RL
+**发布时间：** 2026-10-29 17:51 北京时间（补充窗口）  
+**评分：** 77.0/100（T1；独立双评 78.0、76.0）  
+**关键词：** Video World Model · Closed-Loop Probing · Long-Horizon Evaluation
 
 **一句话：**  
-用真实执行中的事件（停顿、回退并恢复、无进展、未恢复的回退）构造同一轨迹内的进度比较关系，与成功示教的归一化时间标签联合训练进度模型，再把进度差作为势函数塑形奖励；LIBERO 四套件比各套件最强基线高 9.96–13.76 点，真机插入任务从 37.8% 提到 60.0%。
+用目标条件代理在生成过程中在线改相机动作，构建 164 个用例、4 类任务、10 个模型、超过 1,600 条 rollout（约 800 分钟、最长 180 秒）的闭环基准；结果显示近期模型的局部画质更稳，但空间记忆 Overall 只有 4.01–6.53、演化 Overall 只有 2.51–5.17（满分 10）。
 
-![Event2Reward 总览](paper-reading/news/2026-10-30/event2reward/images/page_002_fig_figure_1_review.png)
-*经视觉审查的总览图 1；关系损失、标注协议与逐项结果见[精读笔记](paper-reading/news/2026-10-30/event2reward/event2reward.md)。*
+![WorldProbe 四类探测任务](paper-reading/news/2026-10-31/worldprobe/images/page_003_fig_figure_2_review.png)
+*经视觉审查的任务图 2；四维度量、评分器依赖与完整结果见[精读笔记](paper-reading/news/2026-10-31/worldprobe/worldprobe.md)。*
 
 **技术要点：**
 
-- 进度模型输入为指令、参考起始帧、短视觉历史与可选目标图，Qwen3.5-4B 骨干加进度头（离散分布取期望）与趋势头；成功轨迹用归一化时间做软标签，只负责锚定 0–1 尺度。
-- 事件关系用带 margin 的合页损失约束：回退事件的观测必须低于回退前参考与恢复状态的较小者；停顿给容差；无进展惩罚高于参考的预测。参考分数梯度截断，事件内与事件间取平均。
-- 塑形奖励为 $r^{\text{shaped}}=r^{\text{env}}+\beta[\gamma p_{t+1}-p_t]$，$\beta=1$；执行时不需要在线事件标签。
-- 数据来自约 10 万条真机执行记录，两遍 VLM 加独立人工标注，8,146 条 RoboArena 轨迹上主类别一致率 87.56%；预训练约 20,000 小时。
-- 真机六任务：插入 37.8%→60.0%，操作 81.7%→90.0%；RAM Insert 只有 16.7%，是明显弱项；插头插入 15 分钟对 45 分钟达到连续十次成功，但各只跑了一次训练。
+- 四类任务分别诱导避开遮挡接近目标、沿开放路径长距离行走、跨视角检查同一局部场景、连续转向新区域；代理每步输出离散相机动作，作用到下一个生成块。
+- 目标靠 SAM3.1 的文本条件跟踪保持身份，局部几何用 Depth-Anything-3 重建；没有这两个辅助模块，长时程下目标很快丢失。
+- 四个维度：MUSIQ/MANIQA/Q-Align 的视觉分、VLM 的单帧内容分、基于 ViPE 重建位姿选锚点的记忆分、以及 VLM 的演化分。
+- 内容质量的退化普遍快于视觉质量，斜率全部为负（-0.015 到 -0.093 分/秒）；记忆分里场景与布局通常高于实体与纹理。
+- 一条非受限 DreamX rollout 持续 367.9 秒、491 个代理动作，说明代理本身不是硬瓶颈。
 
 **为什么值得关注：**  
-它把奖励标注从"逐帧完成百分比"降到"事件 + 时间锚点"，让失败数据从负担变成监督来源；时间标签管尺度、关系管方向的分解也很干净。边界在于：消融骨干（Qwen3-VL-4B）与主实验骨干（Qwen3.5-4B）不一致，真机每条件仅三次训练，效率结论是单次运行，且没有报告进度预测在回退片段上的方向准确率。
+它用闭环协议把"世界是否持久"变成可测量的量，并用重建位姿而非指令位姿选记忆锚点，避免把控制误差算进记忆分数。最大保留是评分器：内容、记忆、演化全部由 VLM 打分，论文没有报告与人评的一致性，也没有换裁判做稳健性检查。
 
-**资源：** [论文](https://arxiv.org/abs/2610.39212) · [精读](paper-reading/news/2026-10-30/event2reward/event2reward.md)。论文称将公开标注、数据划分与工具，本次运行时尚不可得。
+**资源：** [论文](https://arxiv.org/abs/2610.39721) · [代码与基准](https://github.com/Untitled-W/WorldProbe) · [精读](paper-reading/news/2026-10-31/worldprobe/worldprobe.md)
 
 ---
 
 ### 📄 论文雷达
 
-以下 7 篇按双评分均值排序；HiFOR 已完成全文精读，其余依据官方摘要与项目资料筛选，数字属于作者报告，未冒充全文复核。
+以下 7 篇按双评分均值排序；QbD-VLA 已完成全文精读，其余依据官方摘要与项目资料筛选，数字属于作者报告，未冒充全文复核。
 
-#### 【VLA与基础模型】HiFOR：三层未来预测 + 动作引导的世界检索
+#### 【端侧部署】QbD-VLA：用闭环成功率决定哪一层保留高精度
 
-**来源 / Paper：** [arXiv:2610.40373v1](https://arxiv.org/abs/2610.40373)（cs.CV/cs.RO）  
-**实际提交：** 2026-10-30 00:21 北京时间（主窗口）  
-**关键词：** Hierarchical Foresight · Latent World Model · Factorized Retrieval  
-**值得关注程度：** 73.5/100（T1；双评 75.0、72.0）  
-**核心贡献：** 用层级依赖掩码联合预测短期状态、语义里程碑与最终目标，再把预测按时间、视角、空间组织成结构化潜世界，动作表示在每步去噪中沿三个维度做因子化检索；LIBERO 平均 98.3%（π0.5 96.9%），RoboTwin 2.0 Hard 49.40%（π0.5 40.35%），真机六任务 81.7%（比 π0.5 高 11.0 点）。
+**来源 / Paper：** [arXiv:2610.38661v1](https://arxiv.org/abs/2610.38661)（cs.RO；13 页）  
+**实际提交：** 2026-10-29 02:46 北京时间（补充窗口）  
+**关键词：** Mixed-Precision Quantization · Closed-Loop Allocation · VLA Deployment  
+**值得关注程度：** 74.0/100（T1；双评 75.0、73.0）  
+**核心贡献：** 从全精度出发逐组降一档，每次在仿真里跑少量回合，用 Wilson 界决定接受或拒绝；四个 VLA 的有效位宽为权重 4.00–4.16、激活 4.47–5.94，LIBERO 平均为 π0.5 96.2、OpenVLA-OFT 91.8、X-VLA 95.8、π0 73.5，而均匀 W4A4 在前三个模型上为 0%。
 
-![HiFOR 总体框架](paper-reading/news/2026-10-30/hifor/images/page_004_fig_figure_2.png)
-*经视觉审查的框架图 2；累积消融、短时域分析与证据边界见[精读](paper-reading/news/2026-10-30/hifor/hifor.md)。*
+![QbD-VLA 方法总览](paper-reading/news/2026-10-31/qbd-vla/images/page_003_fig_figure_1_review.png)
+*经视觉审查的方法图 1；序贯检验、SIMPLER 与 FR3 结果见[精读笔记](paper-reading/news/2026-10-31/qbd-vla/qbd-vla.md)。*
 
-**关键证据与边界：** 累积消融在 RoboTwin 上为 40.35→44.15→45.60→46.95→49.40，LIBERO-Long 为 92.4→95.8；5 步预测优于 10/15 步，说明时域要与控制间隔对齐。真机只与 π0.5 一个基线比较，主表没有方差，注意力可视化只是相关性证据，也没有推理延迟数据。
+**关键证据与边界：** 同成本的敏感性分配在 π0.5 上只有 27.5%/0.0%/52.0%，说明逐组离线打分确实会选错；但 SIMPLER 上 QbD 只比均匀 W4A6 高 2 点、远低于均匀 W4A8，FR3 上 π0.5 的分配 0/6（全精度 6/6，均匀 W8A8 5/6）。代码：[GitHub](https://github.com/jiuyixu25/QbD-VLA)。
 
-#### 【世界模型】Continuous-Action World Models：跨本体的连续动作函数空间
+#### 【世界模型】GenSight：一个 DiT 同时做未来视频与 4D 感知
 
-**来源 / Paper：** [arXiv:2610.40401v1](https://arxiv.org/abs/2610.40401)（cs.RO/cs.CV/cs.LG；12 页）  
-**实际提交：** 2026-10-30 00:34 北京时间（主窗口）  
-**关键词：** Cross-Embodiment · Action Function Space · World Model  
-**值得关注程度：** 64.5/100（T1；双评 66.0、63.0）  
-**核心贡献：** 先在不同本体、不同采样频率的轨迹上预训练一个共享的潜函数空间（动作重建 + 跨时间采样一致性），再把该空间接到世界模型骨干上，由观测、指令与当前状态条件化预测潜动作函数，单解码器可在任意查询时刻输出末端动作。
+**来源 / Paper：** [arXiv:2610.39232v1](https://arxiv.org/abs/2610.39232)（RoboScience、南京大学、香港理工大学、新加坡国立大学；cs.CV/cs.RO）  
+**实际提交：** 2026-10-29 10:50 北京时间（补充窗口）  
+**关键词：** Video Diffusion · Depth/Segmentation/Flow · Embodied World Model  
+**值得关注程度：** 71.0/100（T1；双评 72.0、70.0）  
+**核心贡献：** 把视频、深度、本体分割与首帧相对 2D 流都映射成三通道图像序列，用同一个冻结视频自编码器编码；共享 DiT 只有任务自适应 RMSNorm，所有任务在统一的 velocity 预测空间里联合训练，推理时支持多步生成与单步感知两种模式。项目页：[GenSight](https://gensight-rbs.github.io/)。
 
-**关键证据与边界：** 摘要给出的是框架与动机，没有主结果数字、消融或真机实验；12 页正文。（本次未精读，不把"支持跨本体"当作已验证结论。）
+**关键证据与边界：** 摘要与项目页给出的是统一性与定性结果，没有主表数字、消融规模或真机实验；"跨模态一致性提升"目前是作者主张，本次未精读，不当作已验证结论。
 
-#### 【数据与Benchmark】Robotic Data Inoculation：让残差策略扰动遥操作，主动采集"会犯错"的数据
+#### 【数据与Benchmark】EgoContact：用第一人称视频测"该在哪里接触"
 
-**来源 / Paper：** [arXiv:2610.39054v1](https://arxiv.org/abs/2610.39054)（Sergey Levine 等；cs.RO）  
-**实际提交：** 2026-10-29 07:31 北京时间（补充窗口）  
-**关键词：** Shared Control · Data Collection · Offline RL  
-**值得关注程度：** 72.5/100（T1；双评 74.0、71.0）  
-**核心贡献：** 人持续遥操作，残差策略在线学习并扰动人类命令，把机器人推向"用这批数据训练出的策略将来会犯的错误"附近，人的纠正同时提供恢复示教；在三个真机任务上，用该数据训练的行为克隆与离线 RL 策略达到或超过常规采集。
+**来源 / Paper：** [arXiv:2610.39167v1](https://arxiv.org/abs/2610.39167)（剑桥、慕尼黑工大、ETH 等；cs.RO/cs.CV）  
+**实际提交：** 2026-10-29 09:57 北京时间（补充窗口）  
+**关键词：** Egocentric Video · Contact Prediction · Physical Intelligence  
+**值得关注程度：** 69.0/100（T1；双评 70.0、68.0）  
+**核心贡献：** 22.5K 个人工核验的交互事件，每个含接触前观测、语义意图与像素级接触点；用"未来接触点预测"评测模型的物理精度，发现现有方法在野外场景里经常连目标物体都定位不准。项目页：[EgoContact](https://egocontact.github.io)。
 
-**关键证据与边界：** 摘要只给方向性结论（"improves or matches"），没有成功率数字、试验次数与方差；"扰动分布随学习演化"的收敛性也没有理论保证。
+**关键证据与边界：** 数据规模与人工核验是强项，但摘要没有给出各模型的具体分数与失败率；数据与代码标注为即将发布，本次不可得。
 
-#### 【数据与Benchmark】Embodied at Sea：水下多任务操作的 VLA 实证研究
+#### 【模仿学习与策略】Cross-Controller Transfer：控制器换了，动作含义也变了
 
-**来源 / Paper：** [arXiv:2610.38199v1](https://arxiv.org/abs/2610.38199)（cs.RO/cs.LG；8 页）  
-**实际提交：** 2026-10-28 10:49 北京时间（补充窗口）  
-**关键词：** Underwater Manipulation · VLA · Field Robotics  
-**值得关注程度：** 70.0/100（T1；双评 71.0、69.0）  
-**核心贡献：** 在平静与湍流水域采集 1,616 条水下操作数据，训练 14 个不同本体感受配置的 VLA，在 1,260 次可评分硬件 rollout 中最高达到 93.3%（含部分成功）；另在二战沉船与游艇码头做 748 条数据的案例研究，ACT 显著优于 SmolVLA（47.9% 对 7.9%），并开源 BLUEMBODIED KIT。
+**来源 / Paper：** [arXiv:2610.39280v1](https://arxiv.org/abs/2610.39280)（cs.RO；9 页）  
+**实际提交：** 2026-10-29 11:31 北京时间（补充窗口）  
+**关键词：** Cross-Controller · In-Context Adaptation · Behavior Representation  
+**值得关注程度：** 69.0/100（T1；双评 70.0、68.0）  
+**核心贡献：** 用"指令动作 + 实际运动"的示例编码控制器的行为，让单个策略在上下文中适配六种控制器及其增益、柔顺性变化；真机上比朴素数据混合平均高 33 点，未见控制器模式 50%、未见增益 52%。
 
-**关键证据与边界：** 这是目前少见的真实水下 VLA 规模评估，包含失败与部分成功统计；但任务是抓取与系泊两类，水体扰动与视觉畸变的可控性有限，跨站点泛化未验证。
+**关键证据与边界：** 真机结果具体，但任务集中在接触丰富操作（USB 插入、表面擦拭），没有跨本体实验；"行为编码"与直接条件化控制器参数的区别缺少消融。
 
-#### 【数据与Benchmark】BURGER：用"画图"做 VLA 泛化基准
+#### 【端侧部署】Gaussian Distillation of Flow Policies：一次前向替代十步去噪
 
-**来源 / Paper：** [arXiv:2610.40532v1](https://arxiv.org/abs/2610.40532)（cs.RO/cs.AI）  
-**实际提交：** 2026-10-30 01:34 北京时间（主窗口）  
-**关键词：** VLA Benchmark · Embodied Drawing · Data Scaling  
-**值得关注程度：** 69.5/100（T1；双评 71.0、68.0）  
-**核心贡献：** 以语言条件化的机器人绘画为任务，构建可扩展的轨迹生成管线，28,200 条仿真示教覆盖 282 个绘画任务；在同一空白画布上评估五个 VLA 模型的数据缩放、语言 grounding 与多模态行为，并在 Franka 上部署策略做人在环的实时绘画。
+**来源 / Paper：** [arXiv:2610.40271v1](https://arxiv.org/abs/2610.40271)（cs.RO）  
+**实际提交：** 2026-10-29 23:30 北京时间（补充窗口）  
+**关键词：** Flow Policy · Gaussian Readout · Inference Speed  
+**值得关注程度：** 67.0/100（T1；双评 68.0、66.0）  
+**核心贡献：** 观察到所研究的流策略动作分布可被高斯很好近似，于是把最后一层换成高斯读出，只用 0.02% 的可用状态训练、其余网络冻结；单次前向采样、给出闭式似然，任务成功率接近教师模型，推理速度最高提升 2 倍。
 
-**关键证据与边界：** 任务允许开放式笔顺与多种有效画法，适合分析多模态与组合泛化；但"绘画"与接触丰富操作的距离较远，真机只做定性演示，结论不能直接外推到装配或灵巧手任务。代码与数据：[GitHub](https://github.com/Qxjyqzw/BURGER)、[Hugging Face](https://huggingface.co/datasets/Zhaosying66/BURGER)。
+**关键证据与边界：** 方法极简、工程价值直接，但摘要没有给出绝对成功率、测试任务数量与速度测量协议；"高近似"是否对所有流策略成立也未验证。
 
-#### 【世界模型】world2vec：用潜动力学学"机制性"世界模型
+#### 【VLA与基础模型】SaiVLA-JEPA：未来表征监督没有带来聚合增益
 
-**来源 / Paper：** [arXiv:2610.40637v1](https://arxiv.org/abs/2610.40637)（cs.LG）  
-**实际提交：** 2026-10-30 01:58 北京时间（主窗口）  
-**关键词：** Latent Dynamics · System Identification · Interpretability  
-**值得关注程度：** 66.5/100（T1；双评 68.0、65.0）  
-**核心贡献：** 不依赖奖励，仅从观测与动作学习能在长时域忠实复现真实系统的潜动力学，参数量比 DreamerV3、TD-MPC2、LeWM 少至少一个数量级；在 71 个吸引子基准上做系统辨识，并在连续控制任务上从像素达到 SOTA。
+**来源 / Paper：** [arXiv:2610.38508v1](https://arxiv.org/abs/2610.38508)（cs.RO/cs.AI）  
+**实际提交：** 2026-10-28 18:46 北京时间（补充窗口）  
+**关键词：** JEPA · VLA · Negative Result  
+**值得关注程度：** 66.0/100（T1；双评 67.0、65.0）  
+**核心贡献：** 在已使用 V-JEPA 特征的 VLA 上，额外加两个预测未来表征的辅助头；当前 JEPA 条件化把成功率从 71.6% 提到约 82.5%，但未来监督在给定训练预算下没有可检测的聚合增益。
 
-**关键证据与边界：** 摘要给出参数效率与基准覆盖，但没有逐任务数字与真机实验；"mechanistic"更多指潜空间可辨识性，与机器人决策的落点仍需额外验证。
+**关键证据与边界：** 这是一个有价值的负结果，但只在 LIBERO-Plus 的 10,030 条配对回合上验证；"没有增益"可能来自训练预算不足，作者也没有给出更长训练的曲线。
 
-#### 【模仿学习与策略】AcrossDEX 1.0：从人类运动预训练到双手灵巧操作
+#### 【数据与Benchmark】RoboSeed：把能力、成本与证据放在同一张评分表里
 
-**来源 / Paper：** [arXiv:2610.40210v1](https://arxiv.org/abs/2610.40210)（cs.RO）  
-**实际提交：** 2026-10-29 22:56 北京时间（补充窗口）  
-**关键词：** Bimanual · Hand Embodiment · Motion Pretraining  
-**值得关注程度：** 64.5/100（T1；双评 66.0、63.0）  
-**核心贡献：** 在 HOT3D Aria 上预训练"由五帧图像与三十个手部状态预测未来一秒双手运动"，再保留视觉编码器、时序骨干与腕部参数适配到六通道 Inspire 手与十六关节 Allegro 手；策略从正面图像、命令历史与任务条件预测六十个控制目标，执行前缀并重规划。
+**来源 / Paper：** [arXiv:2610.40026v1](https://arxiv.org/abs/2610.40026)（cs.RO）  
+**实际提交：** 2026-10-29 21:34 北京时间（补充窗口）  
+**关键词：** VLA Evaluation · Cost-Aware Benchmark · Reproducibility  
+**值得关注程度：** 62.0/100（T1；双评 63.0、61.0）  
+**核心贡献：** 提出五维评测框架——能力、下游训练可负担性、部署可负担性、本地验证的研究价值、复现证据；用固定归一化锚点映射到 0–100，并给出平衡、训练受限、部署受限三种偏好配置，缺失测量保持显式。仓库：[PrimitiveX/RoboSeed](https://github.com/PrimitiveX/RoboSeed)。
 
-**关键证据与边界：** 开盖回放 40.6%、Inspire 重定向 100%、Allegro 重定向 93.3%，流匹配在 Allegro 上 90.0%；"重规划受上一计划约束能改善连续执行"是有趣发现，但任务只有两类、没有跨本体泛化实验。
+**关键证据与边界：** 作为"怎么选模型"的框架有价值，但它本身不产生新模型结果；权重与锚点的选择是否稳健，摘要没有给出敏感性分析。
 
 ### 🛠 工程与开源
 
-- **[DexSuite](https://huggingface.co/dexsuite)**（[arXiv:2610.37799](https://arxiv.org/abs/2610.37799)，10-28 02:21）：基于 Genesis 的灵巧操作一体化仿真框架，30 个任务可搭配 10 种机械臂与 12 种末端（并行夹爪到灵巧手），含统一环境 API、集成遥操作与仿真触觉；定义 16 个任务-本体对的基准，发布 4,700 条成功 episode 数据集。适合作为"换手型/换臂"实验的现成底座，项目页在 [dexsuiteorg.github.io](https://dexsuiteorg.github.io)。
-- **[Gym-Anything for Robotics](https://github.com/gym-anything/robotics)**（[arXiv:2610.40565](https://arxiv.org/abs/2610.40565)，10-30 01:42）：让编码代理自动生成机器人仿真与任务，按美国 GDP 选出 25 个仿真、25 个测试与 175 个训练 RL 环境；作者报告最强前沿模型在 25 个测试任务上全部失败、平均奖励仅 0.06，并给出上下文学习、特权教师蒸馏与代码策略生成示教等改进路径。仓库 10-30 新建、5 star，属于"仿真生成基础设施"而非可直接用的 benchmark。
-- **[UMI-Live](https://github.com/AfterQuery-Research/umi-live)**（[arXiv:2610.39385](https://arxiv.org/abs/2610.39385)，10-29 13:18）：双臂 UMI 野外采集全栈，夹爪集成相机、LiDAR-惯性、板载算力与供电，单键录制、异步 SLAM 重建并发布 LeRobot 数据集；π0.5 与 MolmoAct2 在六橙子放置任务上分别 10/10 与 8/10，公开约 40 小时数据与 [Hugging Face 数据集](https://huggingface.co/datasets/brandonyang/umi-live-dataset)。
-- **[RoboAtom](https://arxiv.org/abs/2610.40207)**（10-29 22:55）：给现有多源数据补统一、时间对齐的原子动作标注，覆盖 145 万条轨迹、688 万段技能标签、16,882 小时；配套 RoboAtom-Bench 评测技能识别与时间边界定位，并报告原子动作监督加分层执行在 LIBERO-Long、LIBERO-Plus、RoboTwin 上优于任务级基线。论文称将公开数据、基准与模型，本次运行时尚不可得。
-- **Safety flow matching**（[arXiv:2610.40075](https://arxiv.org/abs/2610.40075)，10-29 21:53）：只用二值可行性 oracle 的流匹配安全护栏，前向用可行性查询修正不安全更新、反向提取局部边界信息做约束感知学习，障碍感知操作上报告 100% 约束满足；思路轻量，但实验面较窄（约 61 分，未入选雷达）。
+本期没有独立于论文、且达到筛选阈值的新开源项目。三条与论文配套的代码在此登记，不重复计分：
+
+- [worldflow-rbs/worldflow](https://github.com/worldflow-rbs/worldflow)：WorldFlow 官方实现，随论文一起发布，含数据与模型入口。
+- [jiuyixu25/QbD-VLA](https://github.com/jiuyixu25/QbD-VLA)：QbD-VLA 官方实现，MIT 许可，10-28 新建，当前 0 star。
+- [PrimitiveX/RoboSeed](https://github.com/PrimitiveX/RoboSeed)：RoboSeed 评测框架仓库，10-29 新建，本次未核实其代码完整度。
+
+GitHub 搜索在 10-30 至 11-01 新建的仓库里只找到个人主页、学习路线与课程整理类项目，没有发现具备新算法、权重或基准价值的独立发布，因此不把 star 数或仓库数量当作本期成果。
 
 ### 💬 社区信号
 
-本次窗口内没有发现可回溯的独立复现、技术争议或第三方基准对比。Hugging Face paper API 对本期五篇精读论文均返回 404，没有 upvote 或讨论量可引用；GitHub 侧 BURGER 仓库 10-30 新建（1 star）、Gym-Anything 仓库 10-30 新建（5 star），UMI-Live 仓库仅 1 star，均不足以作为社区认可的证据。值得继续观察的是"接触接口"这条线：TouchBridge 与 SwapBot 同一天出现在 arXiv，前者把触觉用于人→机数据转换，后者把触觉随工具带到接触界面，二者共同点是"在策略之外先把接触测准"；如果后续出现独立复现或跨平台迁移结果，这条线才足以判断是否可推广。
+本次窗口内没有发现可回溯的独立复现、技术争议或第三方基准对比。Hugging Face 与 GitHub 上，WorldFlow、QbD-VLA、RoboSeed 的仓库均为新建、讨论量接近零，不足以作为社区认可的证据。值得继续观察的是两条"负结果"线：Utility-WAM 指出未来条件的伤害集中在少数精度任务，SaiVLA-JEPA 指出未来表征监督在现有预算下没有聚合增益——如果后续出现独立复现或反例，这两条线会比又一个 SOTA 数字更有信息量。
 
 ### 🔎 补充窗口筛选记录
 
 | 候选 | 实际提交时间（北京时间） | 处理与原因 |
 |---|---|---|
-| [Ego-CEVR](https://arxiv.org/abs/2610.37509) | 10-28 00:30 | 10-28 雷达已收录，去重。 |
-| [CAPTURER](https://arxiv.org/abs/2610.39119) | 10-29 09:05 | 空中灵巧抓取系统，厘米级精度但方法以系统集成为主，约 60 分，低于 T1 门槛 62。 |
-| [RAIBO-Wagon](https://arxiv.org/abs/2610.39267) | 10-29 11:20 | 四足拖车导航，40 次试验 85% 成功、负载接近体重，工程扎实但学习增量有限，约 63 分，未入选。 |
-| [FORGE](https://arxiv.org/abs/2610.37974) | 10-28 05:12 | Humanoids 2026，G1 上 -2.0 到 2.8 m/s 的统一参考生成与全身跟踪，无主结果表，约 62 分，未入选。 |
-| [Echo](https://arxiv.org/abs/2610.37865) | 10-28 03:11 | 16 页 preliminary report，离策略视觉 RL 的加速结果，任务与基线都较少，约 60 分。 |
-| [SymAnt](https://arxiv.org/abs/2610.40632) | 10-30 01:58 | WACV 2027，长程动作预判，偏视频理解而非机器人决策，约 58 分。 |
-| [Safe flow matching](https://arxiv.org/abs/2610.40075) | 10-29 21:53 | 约束满足 100% 但仅障碍感知操作一类实验，约 61 分，未达门槛。 |
-| [LLM-guided Loco-Manipulation](https://arxiv.org/abs/2610.40248) | 10-29 23:19 | 四足推箱，44/45 技能组合正确、34/45 端到端成功，但 LLM 规划器为 LoRA 微调、方法增量中等，约 66 分，落选雷达。 |
-| [DexSuite](https://arxiv.org/abs/2610.37799) | 10-28 02:21 | 仿真框架与数据集，已并入「工程与开源」，不重复计分。 |
-| [10-30 02:00–23:59 投稿](https://arxiv.org/list/cs.RO/recent) | 未公告 | 最新批次止于 10-30 01:59；这段时间无法检查，不写成"无资讯"。 |
+| [GenSight](https://arxiv.org/abs/2610.39232) | 10-29 10:50 | 已入雷达；统一视频生成与 4D 感知，但摘要无主表数字。 |
+| [EgoContact](https://arxiv.org/abs/2610.39167) | 10-29 09:57 | 已入雷达；数据集规模强，代码与数据尚未发布。 |
+| [Cross-Controller Transfer](https://arxiv.org/abs/2610.39280) | 10-29 11:31 | 已入雷达；真机 33 点提升，但无跨本体实验。 |
+| [Gaussian Distillation](https://arxiv.org/abs/2610.40271) | 10-29 23:30 | 已入雷达；方法极简，缺少绝对成功率与速度协议。 |
+| [SaiVLA-JEPA](https://arxiv.org/abs/2610.38508) | 10-28 18:46 | 已入雷达；负结果只在 LIBERO-Plus 上验证。 |
+| [RoboSeed](https://arxiv.org/abs/2610.40026) | 10-29 21:34 | 已入雷达；评测框架，需看敏感性分析。 |
+| [Robotic Data Inoculation](https://arxiv.org/abs/2610.39054) | 10-29 07:31 | 10-30 期已收录，去重。 |
+| [Embodied at Sea](https://arxiv.org/abs/2610.38199) | 10-28 10:49 | 10-30 期已收录，去重。 |
+| [Event2Reward](https://arxiv.org/abs/2610.39212) | 10-29 10:34 | 10-30 期已收录，去重。 |
+| [TouchBridge](https://arxiv.org/abs/2610.40349) / [SwapBot](https://arxiv.org/abs/2610.40646) | 10-30 00:06 / 01:59 | 10-30 期「今日必读」已收录，去重。 |
+| [PRIME W0](https://arxiv.org/abs/2610.39528) / [HiFOR](https://arxiv.org/abs/2610.40373) | 10-29 15:25 / 10-30 00:21 | 10-30 期已收录，去重。 |
+| [CoAWM](https://arxiv.org/abs/2610.40401) / [BURGER](https://arxiv.org/abs/2610.40532) / [world2vec](https://arxiv.org/abs/2610.40637) | 10-30 00:34 / 01:34 / 01:58 | 10-30 期已收录，去重。 |
+| [LLM-guided Loco-Manipulation](https://arxiv.org/abs/2610.40248) | 10-29 23:19 | 四足推箱，44/45 技能组合、34/45 端到端，方法增量中等，约 66 分，未入雷达。 |
+| [Safe Flow Matching](https://arxiv.org/abs/2610.40075) | 10-29 21:53 | 仅障碍感知操作一类实验，约 61 分，低于 T1 门槛。 |
+| [CAPTURER](https://arxiv.org/abs/2610.39119) | 10-29 09:05 | 空中灵巧抓取系统集成，约 60 分，低于门槛。 |
+| [π0.5 on BEHAVIOR-1K](https://arxiv.org/abs/2610.37917) | 10-27 | 实际提交在补充窗口之外，排除。 |
+| [METATRON](https://arxiv.org/abs/2610.38027) | 10-27 | 实际提交在补充窗口之外，排除。 |
+| [10-31 全天投稿](https://arxiv.org/list/cs.RO/recent) | 未公告 | 周六无新公告批次，无法检查，不写成"无资讯"。 |
 
 ### 📊 今日技术趋势
 
-今天可核验的主线是"把接触与未来写进接口，而不是只堆策略网络"：TouchBridge 把指尖接触变成跨本体对应量，SwapBot 把触觉随工具送到工具-物体界面，Event2Reward 把"进度是否回退"变成奖励的局部序约束，PRIME W0 与 HiFOR 则把世界模型的未来表示接进动作生成，并分别用异步调度与结构化检索解决"怎么用"的问题。第二条线是数据与仿真基础设施：DexSuite 统一手型与任务、UMI-Live 把野外双臂采集做成开源栈、RoboAtom 补原子动作标注、Gym-Anything 让编码代理生成仿真，四者都在降低"换任务/换本体"的边际成本。
+今天可核验的主线是"把未来变成可测量的量，再决定怎么用它"。WorldFlow 把 3D 位移接进视频去噪，Utility-WAM 用同检查点反事实拆出未来带来的动作差，CoRAct 把推理字段变成奖励，WorldProbe 用闭环代理测世界是否持久——四篇的共同点不是更大的模型，而是更细的测量接口。第二条线是部署侧的冷静数字：QbD-VLA 证明闭环成功率能救回均匀 4 位的崩溃，但同一套分配在 FR3 的 π0.5 上 0/6，提醒所有"仿真选型"的工作，真机复测不是可选项。
 
-证据形态差异很大：TouchBridge 与 Event2Reward 有真机对照与消融，PRIME W0 与 HiFOR 的主战场仍是 LIBERO 与自建真机套件，CoAWM 与 world2vec 目前只有摘要级证据。共同短板也很一致——自建真机套件不公开、缺少方差与失败案例分析、跨平台迁移普遍未验证。
+证据形态差异很大：WorldFlow 有 1.44M 样本与真机 36 次执行，Utility-WAM 有逐任务统计与 60 次真机试验，CoRAct 有逐级消融与一致性指标，WorldProbe 有 1,600 条 rollout；但四篇都缺少独立复现，评分器与自建真机套件也普遍不公开。
 
 ### 检索覆盖与精读状态
 
-- **官方 arXiv 召回：** 直接抓取 [cs.RO recent](https://arxiv.org/list/cs.RO/recent)（485 条）、[cs.AI recent](https://arxiv.org/list/cs.AI/recent)（1,497 条）、[cs.LG recent](https://arxiv.org/list/cs.LG/recent)（1,438 条）与 [cs.CV recent](https://arxiv.org/list/cs.CV/recent)（926 条），解析 10-27、10-28、10-30 三个公告批次共 2,492 个唯一条目，用 arXiv API 取 v1 提交时间并按北京时间筛选出 930 条落在 10-28 00:00 至 10-30 01:59 的候选，再按关键词预筛出 113 条强相关、74 条中等相关逐条读摘要。最新公告批次为 10-30，**10-30 02:00–23:59 批次不可见**，这是本期最大来源缺口；主窗口只覆盖 2/24 小时。
-- **机构与会议：** 检查 Google DeepMind blog（10 月条目为 Genie 4、Gemini 4 Argon for Robotics 等，均非 10-29/10-30 新增）、NVIDIA GEAR 主页（无新条目）、Figure news（最新 9-30）、1X discover（最新 7 月）；Physical Intelligence 站点返回 308 重定向循环，本次无法读取，记为来源缺口。
-- **工程与社区：** GitHub API 核对 Gym-Anything（10-30 新建，5 star）、BURGER（10-30 新建，1 star）、UMI-Live（1 star）；Hugging Face paper API 对五篇精读论文均 404；未发现独立复现或技术争议。不把 star 数或演示视频当作结果复现。
-- **精读：** [索引](paper-reading/news/2026-10-30/README.md)。必读 4 篇 + 雷达最高 1 篇，共 5 篇；TouchBridge 10 页、SwapBot 9 页、PRIME W0 22 页、Event2Reward 44 页、HiFOR 11 页均完整提取，grounding、八项笔记 lint、质量与可读性审查、原脚本正式保存及 SHA-256 全部通过。共 6 张图片 materialized，正文无占位；TouchBridge 的总览图 1 因裁切混入标题与图注、一次修复后仍含图注首行，最终改用方法图 3 作为代表图并如实登记。本次未执行训练、推理或机器人实验。
+- **官方 arXiv 召回：** 直接抓取 [cs.RO recent](https://arxiv.org/list/cs.RO/recent)（485 条）、[cs.AI recent](https://arxiv.org/list/cs.AI/recent)（1,497 条）、[cs.LG recent](https://arxiv.org/list/cs.LG/recent)（1,438 条）与 [cs.CV recent](https://arxiv.org/list/cs.CV/recent)（926 条），并核对 `/new` 页（Friday, 30 October 2026，109 新投稿 + 20 交叉）。用 arXiv API 取 v1 时间戳后，落在 10-29 00:00 至 10-31 23:59 的候选共 105 条；10-30 02:00 至 11-01 07:59（北京时间）的 cs.RO 投稿查询结果为 0。**主窗口 10-31 无新公告批次，这是本期最大来源缺口。**
+- **机构与会议：** 检查 Google DeepMind blog（10 月条目为 Genie 4、Gemini 4 Argon for Robotics 等，均非 10-30/10-31 新增）、Physical Intelligence blog（最新 10-13）、Figure news（最新 9 月）、1X discover（最新 7 月）、RAI Institute resources（最新 10-28）；NVIDIA GEAR 页面返回 404。未发现 10-31 当天的新研究发布。
+- **工程与社区：** GitHub 搜索 10-30 至 11-01 新建仓库，仅见个人主页与学习路线类项目；核对 WorldFlow、QbD-VLA、RoboSeed 三个配套仓库，均为新建、0 star 量级，没有独立复现或技术争议可引用。
+- **精读：** [索引](paper-reading/news/2026-10-31/README.md)。必读 4 篇 + 雷达最高 1 篇，共 5 篇；WorldFlow 22 页、Utility-WAM 23 页、CoRAct 9 页、WorldProbe 19 页、QbD-VLA 13 页均完整提取，grounding、八项笔记 lint、质量与可读性审查、原脚本正式保存及 SHA-256 全部通过。共 27 张图片 materialized；WorldProbe 的 Figure 1 与 Table 7、QbD-VLA 的 Table 5 因裁切缺陷未进入正文，已在各自精读 README 登记。本次未执行训练、推理或机器人实验。
 
 ---
 
@@ -254,6 +265,7 @@
 
 | 日期 | 日报 | 精读 |
 | --- | --- | --- |
+| 2026-10-31 | [日报](news/2026-10-31.md) | [5 篇](paper-reading/news/2026-10-31/README.md) |
 | 2026-10-30 | [日报](news/2026-10-30.md) | [5 篇](paper-reading/news/2026-10-30/README.md) |
 | 2026-10-29 | [日报](news/2026-10-29.md) | [4 篇](paper-reading/news/2026-10-29/README.md) |
 | 2026-10-28 | [日报](news/2026-10-28.md) | [5 篇](paper-reading/news/2026-10-28/README.md) |
