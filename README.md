@@ -2,210 +2,348 @@
 
 > 具身智能与世界模型每日研究动态与论文精读。
 
-**最新一期：2026-11-01** ｜ [日报原文](news/2026-11-01.md) · [精读索引](paper-reading/news/2026-11-01/README.md) · [历史归档](#历史归档)
+**最新一期：2026-11-02** ｜ [日报原文](news/2026-11-02.md) · [精读索引](paper-reading/news/2026-11-02/README.md) · [历史归档](#历史归档)
 
 ---
 
-<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-01.md 自动镜像，请勿手工编辑 -->
+<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-02.md 自动镜像，请勿手工编辑 -->
 
-## 2026-11-01 Embodied AI & World Models Daily
+## 2026-11-02 Embodied AI & World Models Daily
 
 > 面向具身智能 / Robotics 研究员与工程师的研究与工程资讯。
-> 主窗口：北京时间 2026-11-01 00:00–23:59；补充窗口：2026-10-30 00:00 至 2026-10-31 23:59。
-> **来源检查不完整（主窗口）：** 2026-11-01 为周日，arXiv 没有新公告批次。运行时刻（2026-11-02 08:55 北京时间，本次任务运行时段）最新 `/new` 页仍为 "Showing new listings for Friday, 30 October 2026"；arXiv API 对 cs.RO 在 submittedDate ∈ [2026-10-30 02:00, 2026-11-02 23:59]（北京时间）的查询返回 0 条，说明周五批次切点（10-30 01:59 北京时间）之后不存在可核验的新投稿。因此本期**不能**断言 11-01 全天无资讯，只能说不存在可检索的新公告。以下全部条目来自 48 小时补充窗口（实际提交时间 10-30 00:03–01:59 北京时间），且均为 10-30、10-31 两期日报未刊载的内容；每条标注实际提交时间，不与前两期重复计数。
+>
+> **来源检查不完整。** 主窗口为北京时间 11 月 2 日 00:00–23:59，补充窗口为 10 月 31 日至 11 月 1 日。本次访问的 arXiv 官方 recent/new 最新仍为 11 月 2 日公告批次，逐篇核验未覆盖到 11 月 2 日实际提交的新论文；不能据此判断当天没有资讯。以下论文全部明确标注为 10 月 31 日补充窗口，11 月 2 日已核验的新事件为两项工程代码发布。
+>
+> 本期：1 篇必读、10 篇论文雷达、2 项工程动态；完成 3 篇全文精读和 3 张方法总览图审查。[精读索引](paper-reading/news/2026-11-02/README.md)。分数为同一标准两轮编辑评分的平均值，不代表独立复现。
 
 ### 🔥 今日必读
 
-#### 1. 【感知与多模态】PhysVLMM：把"这扇门会怎么动"做成地图里的后验，而不是标签
+#### 1. 【最小世界模型】WorldSketch：让 VLM 建模，把动作交给几何规划器
 
-**来源：** [arXiv:2610.40539v1](https://arxiv.org/abs/2610.40539)（cs.RO；独立作者 Dibyendu Ghosh，论文未标注机构）  
-**类型：** Paper，research_paper 权重  
-**发布时间：** 2026-10-30 01:35 北京时间（补充窗口）  
-**评分：** 82.5/100（T1；独立双评 83.0、82.0）  
-**关键词：** Articulated Objects · Physical Belief · Mobile Manipulation
+**来源：** [arXiv:2611.00513v1](https://arxiv.org/abs/2611.00513)（cs.RO；Jiaming Wang）  
+**类型：** Paper / research_paper  
+**发布时间：** 2026-10-31 09:06:20 北京时间（实际首次提交；补充窗口）  
+**评分：** 86.5/100（87 / 86）  
+**关键词：** Agentic Robotics · Kinematic World Model · Mobile Manipulation
 
-**一句话：**  
-现有的场景地图只记录"这是什么、有没有被移动过"，不记录"拉一下会怎样"；PhysVLMM 给每个可动部件维护机构类型与动力学的后验，把一次拉动的证据以闭式解传给未接触的同款部件，并在给定风险下回答"这次拉动会成功吗"，答不了就弃权。
+**一句话：** VLM 不直接生成关节动作，而是主动请求测量，构建任务相关的物体、关节与目标草图；规划器在草图上联合优化接触和全身运动，执行反馈再反驳或修订草图。
 
-![PhysVLMM 方法总览](paper-reading/news/2026-11-01/physvlmm/images/page_003_fig_figure_1_review.png)
-*经视觉审查的 Fig. 1：VLMM 元素如何扩展出关节几何、动力学后验与动作响应分布；秩条件、闭式证据共享与 18 户真机结果见[精读笔记](paper-reading/news/2026-11-01/physvlmm/physvlmm.md)。*
-
-**技术要点：**
-
-- 两个负结果撑起方法：没有测力时，任意摩擦、阻尼、惯性组合都能复现同一段观察到的运动（Proposition 1），所以"看别人拉过"只能识别几何；一次测力拉动也只约束被拉部件的一个方向（Proposition 2）。因此地图必须保留"证据无法区分的那一维"，而不是取点估计。
-- 每个 VLMM 元素扩展三样东西：关节几何、机构与动力学的信念、以及"对提议动作的响应分布"（运动、接触、碰撞）。证据传播是闭式的——同一建筑里同型号、同批次安装的门与抽屉共享先验，未测过的部件也能得到有依据的预测。
-- 查询算法回答二值问题："这次拉动能否让它继续动并避开障碍"，在给定时风险水平下给出答复，风险不可控时弃权；单次查询 0.03 ms。
-- 主结果（真实门与抽屉、18 个家庭的 Hoi! 数据，加 120 个仿真厨房）：held-out 拉动中关节类型识别 86%，单视图学习方法为 48%；对拉动响应的预测误差比可微仿真低 41%（CRPS 0.323 对 0.544），单例耗时 13 ms 对 230 s，快四个数量级。
-- 后验把最终位置误差从 0.460 降到 0.270；证据共享把未接触部件的力误差从 56% 降到 42%；在 0.02–0.30 的每一档名义风险上，false-safe 答复都落在名义风险之内。
-- 作者自己给出的反例：把整户已测部件直接合并（pooling）与按 look-alike 分组效果相当；更简单的变体在"被拉部件停在哪"上至少一样好。
-
-**为什么值得关注：**  
-它把"地图里的物理可动性"从人工标签变成了带不确定性的可查询后验，而且给出的是闭式证据传播而不是再训一个网络——这类"地图即信念"的接口对移动操作的任务规划很实用，18 户真实数据加可微仿真基线的证据质量在单作者论文里少见。需要保留的判断是：作者只有一位、未见代码与项目页，查询只回答成功/弃权与响应分布，不直接输出可供规划的轨迹。
-
-**资源：**
-
-- Paper：[arXiv 摘要页](https://arxiv.org/abs/2610.40539)
-- Code：未找到可确认的公开代码仓库
-- Project：未找到项目页
-- 精读：[PhysVLMM 精读笔记](paper-reading/news/2026-11-01/physvlmm/physvlmm.md)
-
----
-
-#### 2. 【模仿学习与策略】JEDI：压缩演示时该保留什么，由"预测下一阶段关键帧"来定义
-
-**来源：** [arXiv:2610.40356v1](https://arxiv.org/abs/2610.40356)（cs.RO；纽约大学 Tandon、NYU Abu Dhabi CAIR / AIR Lab）  
-**类型：** Paper，research_paper 权重  
-**发布时间：** 2026-10-30 00:11 北京时间（补充窗口）  
-**评分：** 73.5/100（T1；独立双评 74.0、73.0）  
-**关键词：** In-Context Imitation Learning · Demonstration Compression · Video JEPA
-
-**一句话：**  
-上下文模仿学习的瓶颈是演示占满上下文，而现有压缩器只用动作损失训练；JEDI 把每条演示独立压成 latent slots，要求这些槽能预测 query episode 的下一阶段关键帧（在冻结 V-JEPA 2.1 空间里），于是槽保留的是执行过程，不只是任务身份。
-
-![JEDI 四阶段总览](paper-reading/news/2026-11-01/jedi/images/page_004_fig_figure_2_review.png)
-*经视觉审查的 Fig. 2：演示压缩、槽预测、演示选择与策略执行四个阶段；消融、干扰项与推理成本见[精读笔记](paper-reading/news/2026-11-01/jedi/jedi.md)。*
+![WorldSketch 方法总览](paper-reading/news/2026-11-02/worldsketch/images/page_003_fig_figure_2_review.png)
+*原图 2：从深度检查草图到联合接触规划，再将执行结果反馈给建模。*
 
 **技术要点：**
 
-- 问题定义很具体：一条多视角、数百步的演示重采样后仍有数千 token，现有 ICIL 策略通常只能用 1–2 条演示，超出训练时见过的提示长度还会退化；ContextFlow 这类压缩器只用动作损失训练，而且只评过单条演示。
-- 压缩器独立处理每条演示，输出 $k$ 个 latent slots 并缓存；预测器在冻结 V-JEPA 2.1 的嵌入空间里从槽预测 query 的下一阶段关键帧。因为未来帧大部分可由当前帧推出，论文加入反事实项：槽来自另一任务、或同任务但执行过程不同时，预测必须变差。
-- 测试时 query 的未来未知，但演示库里的未来已知，于是用预测器给每条候选演示打分来选择上下文；后训练阶段加入关键点 token，使策略能接受人手演示的条件。
-- 主结果：单演示设置下 LIBERO-Spatial / Object / Goal 与 RLBench 成功率为 92.7 / 83.6 / 63.0 / 82.1，ContextFlow 为 85.6 / 76.4 / 56.5 / 73.6；N=16 时升到 95.4 / 86.2 / 69.1 / 86.3。
-- 过程保真度是关键证据：LIBERO-Order 的标准指令不揭示物体顺序，JEDI 跟随演示顺序的比例为 84.1%，仅动作压缩为 52.2%；共享场景中无指令到达被演示目标 74.9% 对 34.1%；未见牛奶物体的抓取高度误差 2.0 cm 对 4.1 cm。
-- 消融把收益归因到目标函数而非架构：任务负例把 $DD_{task}$ 从 1.11 提到 2.06、上下文跟随率 69.7%；过程负例把 $DD_{proc}$ 从 1.09 提到 1.49、顺序匹配 57.4%→84.1%；只用同样的标签做对比学习（无预测）顺序匹配只有 73.5%。
+- 世界表示由无标签碰撞体素、任务实体和目标组成。尺寸由深度测量提供；多个关节机制假设随执行更新，避免让语言模型凭空估计精确几何。
+- RoboCasa365 的 30 个原子任务、90 集中成功 82/90；对照 CaP-Agent0 为 30/90，每集输入词元约 88k 对 872k。但全部实验都在仿真中，WorldSketch 每集 7.1 分钟，比约一分钟的训练策略慢。
+- LIBERO-PRO 抽取的 150 集中成功 146/150，作者自己的编码代理为 147/150，不能概括成所有编码代理都明显落后。导航达到约 76% 成功率，但路径效率弱于一个逐步代理对照。
+- 一厘米深度噪声下早期版本回放显著退化；当前只支持刚体单关节，真实感知、接触与新机制仍待验证。
 
-**为什么值得关注：**  
-它把"压缩该保留什么"从架构选择变成了可检验的训练目标，并用多演示、过程跟随、抓取高度三类证据支撑，对做长上下文策略或演示检索的人可以直接借用。边界也清楚：实验集中在 LIBERO/RLBench 加 5 个真机任务，依赖冻结的 V-JEPA 特征与关键点标注，未报告推理延迟与显存占用，也没给出与更大规模真机数据的 scaling 曲线。
+**为什么值得关注：** 最有价值的是可被测量和执行检验的中间接口。模型负责语义与机制假设，几何后端负责精确约束；这为诊断错误来自“看错世界”还是“执行失败”提供了清晰分界。
 
-**资源：**
-
-- Paper：[arXiv 摘要页](https://arxiv.org/abs/2610.40356)
-- Code：未找到可确认的公开代码仓库
-- Project：未找到项目页
-- 精读：[JEDI 精读笔记](paper-reading/news/2026-11-01/jedi/jedi.md)
-
----
-
-#### 3. 【世界模型】Probing Spatial State：能读出画面，不等于能维持世界
-
-**来源：** [arXiv:2610.40636v1](https://arxiv.org/abs/2610.40636)（cs.CV；纽约大学、南洋理工大学、香港科技大学、香港中文大学）  
-**类型：** Paper，research_paper 权重  
-**发布时间：** 2026-10-30 01:58 北京时间（补充窗口）  
-**评分：** 72.5/100（T1；独立双评 73.0、72.0）  
-**关键词：** Spatial State · Frozen-Feature Probing · World Models
-
-**一句话：**  
-论文用 10 个冻结表征、ScanNet++ 的流式第一视角轨迹和四个能力层级（空间结构、物体持久性、预测性更新、可操作性）来问：视觉基础模型是否真的提供了可持续的空间状态？答案是没有单一最优表征，而且"看得清"与"记得住""用得上"是三件不同的事。
-
-![Probing Spatial State 四层空间能力总览](paper-reading/news/2026-11-01/spatial-probe/images/page_002_fig_figure_1_review.png)
-*经视觉审查的 Fig. 1：移动观察者从局部视角建立内部空间表示，L1–L4 逐级要求读出、维持、预测与行动；十种表示的完整结果见[精读笔记](paper-reading/news/2026-11-01/spatial-probe/spatial-probe.md)。*
-
-**技术要点：**
-
-- 四个层级对应四种逐级加码的要求：L1 从当前观测读出深度与相机位姿；L2 在物体离开视野后仍能定位；L3 在自运动下预测下一段特征（直接预测与路径积分分开评）；L4 把状态接到目标条件动作上（候选选择与连续输出两种设置）。
-- 实验设计上沿两个轴扫：网络深度（多层骨干逐 block）与流式前缀长度（8 到 24 帧，每个前缀独立编码，问的是"因果前缀的表征支持什么"，而不是模型是否在线维护状态）；并加入匹配控制：改运动、改历史、改变换顺序、改目标。
-- 主结果：没有任务无关的赢家。Fast3R 的相机位姿与物体持久性最好（持久性误差 32.79°），DINOv2 直接预测最好（R@1 0.2373），V-JEPA2 路径积分最好（0.1588）；持久性与相机位姿读出的秩相关 $\rho=0.76$，与深度、实例、视角一致性只有 $\rho\le0.43$。
-- 两个反直觉现象：更长前缀让 8 个模型的持久性全部变差；改目标会让预测动作旋转 30–46°，但把正确目标交给模型并不能可靠提升推进进度——"输入被使用"不等于"具备功能效用"。
-- 作者主动标注的混淆项：Fast3R 的训练数据包含 ScanNet++，部分验证场景可能在其训练集中，它的领先可能部分来自场景熟悉度；多数实验为单训练种子。
-
-**为什么值得关注：**  
-这是给"世界模型/空间表征"降温的一篇：它把评测拆成可分别证伪的四层，并给出"强可读性不保证持久性、更不保证可操作性"的负结果。做 VLA 视觉骨干选型、世界模型评测或空间记忆模块的人，可以直接复用它的控制变量设计。注意它是分析性论文，不提出新模型，结论限于静态室内场景与观察者运动，不含物体动力学与接触物理。
-
-**资源：**
-
-- Paper：[arXiv 摘要页](https://arxiv.org/abs/2610.40636)
-- Project：[项目页](https://yyyybq.github.io/probing-spatial-state/)
-- Code：[GitHub](https://github.com/yyyybq/Probing_Spatial_State_Release)
-- 精读：[Probing Spatial State 精读笔记](paper-reading/news/2026-11-01/spatial-probe/spatial-probe.md)
-
----
+**资源：** [论文与 PDF 入口](https://arxiv.org/abs/2611.00513) · [全文精读](paper-reading/news/2026-11-02/worldsketch/worldsketch.md)。本次未找到可确认的独立官方代码、权重发布入口。
 
 ### 📄 论文雷达
 
-以下 2 篇按双评分均值排序；UED 基准已完成全文精读，DAWN 仅依据全文摘要、方法与实验章节筛选，数字属于作者报告。
+以下 10 篇均为 **2026-10-31 实际首次提交，属于补充窗口**；按双评分平均分排序，最高两篇已完成精读。除标注全文复核的两篇外，技术概述基于核验后的官方摘要，未经独立复现。
 
-#### 【强化学习】Is It the Curriculum or Just the Easy Start? 14 种课程法在 5 个四足上同台
+#### 【策略服务】Reflex：复用完整动作块，而不只缓存去噪状态
 
-**来源 / Paper：** [arXiv:2610.40364v1](https://arxiv.org/abs/2610.40364)（cs.LG/cs.RO；弗罗茨瓦夫理工大学、Machinekind、Solvro）  
-**实际提交：** 2026-10-30 00:15 北京时间（补充窗口）  
-**关键词：** Unsupervised Environment Design · Terrain Curriculum · Quadruped Locomotion  
-**值得关注程度：** 69.0/100（T1；双评 70.0、68.0）  
-**核心贡献：** 把 14 种 UED、域随机化与机器人课程法放进同一协议：5 个四足（闭链 W01-TEK、Go1、Go2、Barkour vB、Spot）、MuJoCo MJX、同一 PPO 学生、匹配环境步数，关卡是 8 维可解释地形参数；结论是没有任何方法在所有机器人和 level set 上进入 top group，而分布内随机地形上的 top group 几乎都由"简单/低难度训练关卡"构成。
+**来源 / Paper：** [arXiv:2611.00524v1](https://arxiv.org/abs/2611.00524)  
+**首次提交：** 2026-10-31 09:28:56 北京时间  
+**关键词：** Action Cache · Serving · Residual Correction  
+**值得关注程度：** 85.5/100（86 / 85；全文已复核）
 
-![UED 四足基准总览](paper-reading/news/2026-11-01/ued-quadrupeds/images/page_001_img_01.png)
-*经视觉审查的 Fig. 1：课程法提出八维地形参数、同一 PPO 学生在五台四足上训练与评测；统计算力与 top group 结果见[精读笔记](paper-reading/news/2026-11-01/ued-quadrupeds/ued-quadrupeds.md)。*
+**核心贡献：** 用策略自身视觉特征和动作感知距离检索、融合历史动作块，再做残差修正与进度停滞检查。默认设置摊销推理加速 1.4–11 倍，平均 3.3 倍；命中时仍运行视觉编码。SO-101 两任务为 172/200 对 174/200 成功、21.8 对 66.5 ms 决策时延；并发吞吐测试为记录请求回放，不能当作百台真机验证。
 
-**关键证据与边界：** Go1 上 ACCEL-LP 64.0% 领先，全范围均匀 DR 只有 34.9%，PAIRED 家族 24.6–33.3%；但三个机器人上分布内领先者不是 held-out 地形领先者——DR-easy 与 Terrain-CL 在 Go1 的 d=0.25 上几乎打平（61.6 对 62.3），OOD 上差 7.2 点（38.6 对 45.8）。代码：[Solvro/ml-wojtek-ued](https://github.com/Solvro/ml-wojtek-ued)（MIT）；全文精读见 [UED 精读笔记](paper-reading/news/2026-11-01/ued-quadrupeds/ued-quadrupeds.md)。边界：全部在仿真内，成功率为最终确定性策略、5 个种子的均值，未做真机迁移。
+![Reflex 方法总览](paper-reading/news/2026-11-02/reflex/images/page_005_fig_figure_4_review.png)
+*原图 4：缓存路径与必要的原策略刷新共同控制执行漂移。*
 
-#### 【操作与抓取】DAWN：把拧螺丝拆成对准插入与受控退扣两段
+[全文精读](paper-reading/news/2026-11-02/reflex/reflex.md)。本次未确认独立官方代码仓库；论文使用 openpi 不代表 openpi 就是 Reflex 实现。
 
-**来源 / Paper：** [arXiv:2610.40537v1](https://arxiv.org/abs/2610.40537)（cs.RO；马里兰大学机械工程系，8 页）  
-**实际提交：** 2026-10-30 01:35 北京时间（补充窗口）  
-**关键词：** Diffusion Policy · Contact-Rich Manipulation · Force Control  
-**值得关注程度：** 65.0/100（T1；双评 67.0、63.0）  
-**核心贡献：** 面向回收场景的自动拆螺丝：AlignNet 用扩散策略做 4 mm 容差内的起子对准与插入，LatchNet 用视觉+力分类阶段转换（准确率 0.90、精确率 0.90、召回 0.98、F1 0.94），UnfastNet 用轻量网络加力启发式（反馈力 ≥10 N 即关停电动起子）完成退扣；Franka 加 3 台 RealSense D435i、10 Hz 采集，退扣阶段只有 15 条演示。
+#### 【全身控制】Anchor 1：稀疏参考保留意图，解耦反馈修正误差
 
-**关键证据与边界：** 作者报告对准插入成功率与熟练人工操作员相当（3 名操作员各 10 次），消融显示仅用 mount 相机加本体感觉即可，额外相机与力反馈对对准没有增益——这与"多模态一定更好"的直觉相反。边界：单一任务族（十字螺丝拆卸）、演示极少、退扣阶段依赖手工力阈值，摘要未给绝对成功率与失败分布。
+**来源 / Paper：** [arXiv:2611.00193v1](https://arxiv.org/abs/2611.00193)  
+**首次提交：** 2026-10-31 01:56:53 北京时间（项目页标为 10 月 30 日，未提供可换算时区）  
+**关键词：** Humanoid · Sparse Reference · Error Feedback  
+**值得关注程度：** 85/100（86 / 84；全文已复核）
+
+**核心贡献：** 校准骨盆、双腕和双踝五姿态，配合离线重定向和数据筛选学习全身协调，再把显式误差送入控制解码器。内部集仿真全局 SR 88.7%，公开集降至 54.2%；真机两组腕全局误差为 44.58 和 75.69 mm。在线无需重定向、60 ms 前瞻具有工程价值，但训练仍使用离线重定向，跟踪准确也不保证抓握与接触稳定。
+
+![Anchor 1 方法总览](paper-reading/news/2026-11-02/anchor/images/page_017_fig_figure_10_review.png)
+*原图 10：稀疏姿态与动作词元共用控制器，显式误差走独立反馈支路。*
+
+[全文精读](paper-reading/news/2026-11-02/anchor/anchor.md) · [作者项目页](https://archon.tech/research/anchor1)。项目页写明模型及部署、遥操作资源预计 2026 年晚些时候发布，本次不记作已开放权重。
+
+#### 【动作相关表示】CausalWAM：将动作相关潜变量与干扰因素分开
+
+**来源 / Paper：** [arXiv:2610.42096v1](https://arxiv.org/abs/2610.42096)  
+**关键词：** World-Action Model · Sparse Action Routing · Identifiability  
+**值得关注程度：** 81.5/100（81 / 82）
+
+**核心贡献：** 用稀疏动作路由分离可被动作影响的表示与干扰表示，同时保留世界预测。其可辨识性结论依赖论文建模与稀疏性假设，并只到可逆变换和置换意义；不能直接读成真实机器人环境中的因果结构已被完整恢复。摘要给出合成和真实数据实验，本期不补造未核验的增益数字。
+
+#### 【冻结策略改进】RoboArchitect：让编码模型修改策略外壳
+
+**来源 / Paper：** [arXiv:2610.42141v1](https://arxiv.org/abs/2610.42141)  
+**关键词：** Policy Harness · Persistent Memory · Test-Time Adaptation  
+**值得关注程度：** 81/100（82 / 80）
+
+**核心贡献：** 从 rollout 诊断错误，迭代修改冻结策略外围的代码与持久记忆，在任务级优化后测试留出场景和任务。摘要报告未见场景成功率 9.7%→43.3%、未见任务 12.7%→40.2%。应区分外壳优化的试错预算与测试表现；不更新策略权重不等于无需额外计算或经验。
+
+#### 【分层世界模型】ID-WM：高层可达子目标与底层逆动力学配合
+
+**来源 / Paper：** [arXiv:2610.42146v1](https://arxiv.org/abs/2610.42146)  
+**关键词：** Hierarchical Planning · Implicit Dynamics · Inverse Dynamics  
+**值得关注程度：** 80.5/100（80 / 81）
+
+**核心贡献：** 高层生成可达子目标，底层以世界模型和逆动力学将其落为动作，连接远期规划与局部可执行性。摘要在三个导航、操作评估套件报告相对策略或扩散规划方法提升 38.5%、相对单层 WM-MPC 提升 135%；这些是作者报告的相对增幅，不能写成成功率增加同等百分点。
+
+#### 【接触丰富运动】ROOF：学习人形机器人从狭窄障碍下脱困
+
+**来源 / Paper：** [arXiv:2610.42097v1](https://arxiv.org/abs/2610.42097)  
+**关键词：** Humanoid RL · Contact Geometry · Escape  
+**值得关注程度：** 80/100（79 / 81）
+
+**核心贡献：** 利用接触支撑几何、逃离指导和运动先验塑造奖励，部署一套仅本体感知策略。摘要的 lift-only 板障碍仿真为 88.5% 对 18.9%，真机 G1 为七种障碍场景中成功 95/150。部署无需外部几何观测，不代表训练不用几何特权信息，也不保证任意障碍可脱困。
+
+#### 【触觉推理】TacMind：用动作条件触觉预测支持反思
+
+**来源 / Paper：** [arXiv:2611.00455v1](https://arxiv.org/abs/2611.00455)  
+**关键词：** Tactile Reasoning · Predictive Reflection · Benchmark  
+**值得关注程度：** 79.5/100（80 / 79）
+
+**核心贡献：** 在 128 个精细控制、识别与动态任务中，以触觉历史预测动作条件潜表示，并通过预测性反思修正候选动作。评测含静态、动态变体和 12 种扰动，有助于检查模型是否真正利用接触信息。本期仅核验摘要，不把仿真基准表现外推为真实触觉迁移。
+
+#### 【记忆修复】SPARK：触发定向重观察，而不是无限追加场景记忆
+
+**来源 / Paper：** [arXiv:2611.00344v1](https://arxiv.org/abs/2611.00344)  
+**关键词：** Embodied QA · Semantic Memory · Active Re-observation  
+**值得关注程度：** 77.5/100（78 / 77）
+
+**核心贡献：** 语义评判器识别知识库问题，触发物理重观察，再选择新增、替换或删除条目。摘要在四张 AirSim 室外地图、两类退化视角和 158 个固定问题上报告收益，存储对象少 13%–41%。评估使用可见性 oracle，且本期未核验真机证据；重点是记忆纠错协议而非普遍问答能力。
+
+#### 【评测诊断】Validation Loss：低验证误差何时不能预测真机成功
+
+**来源 / Paper：** [arXiv:2611.00283v1](https://arxiv.org/abs/2611.00283)  
+**关键词：** Offline Validation · Robot Learning · Failure Analysis  
+**值得关注程度：** 77.5/100（76 / 79）
+
+**核心贡献：** 在 SO-101 单一抓放任务中比较多种策略、82 个检查点和 930 次真机 rollout，发现同策略、跨随机种子和跨策略的验证损失关系不同。一个低留出误差设置仅成功 3/110。该结果提示分别检查停滞、不动作和动作误差，不能直接推出所有离线验证指标都无价值。
+
+#### 【策略可解释性】BehaviorGraphs：用行为模式和时序关系定位故障
+
+**来源 / Paper：** [arXiv:2611.00405v1](https://arxiv.org/abs/2611.00405)  
+**关键词：** Policy Diagnosis · Temporal Graph · Human Study  
+**值得关注程度：** 76.5/100（77 / 76）
+
+**核心贡献：** 无监督聚类行为模式，再构建关联结果的时序图，帮助开发者检查策略执行。三个真实任务用户研究中 16/18 人偏好该表示，报告感知时间与负担下降；这些属于主观测量，不能当作实际调试耗时减少。数据集上的进度估计改善也不自动意味着策略成功率提升。
 
 ### 🛠 工程与开源
 
-本期窗口内没有独立于论文、且达到筛选阈值的新模型权重发布。以下三项与本期条目配套，登记而不重复计分：
+#### Retrieve-then-Steer：旧论文新增可检查的实现与评测配置
 
-- [Solvro/ml-wojtek-ued](https://github.com/Solvro/ml-wojtek-ued)：UED 四足基准的代码、关卡空间与评测套件，MIT 许可，8 月建库、10-29 仍在推送，当前 4 star；配套机器人模型在 [machinekind/w01-tek](https://github.com/machinekind/w01-tek)（Apache-2.0，9 star）。这是本期少数"代码与论文同源可核对"的工程产物。
-- [yyyybq/Probing_Spatial_State_Release](https://github.com/yyyybq/Probing_Spatial_State_Release)：Probing Spatial State 的探针与评测代码，10-19 建库，11-01（UTC）仍有推送；[项目页](https://yyyybq.github.io/probing-spatial-state/) 提供分层结果浏览。
-- [yixue888/Coract_checkpoint](https://huggingface.co/yixue888/Coract_checkpoint)：11-01 新建的 CoRAct（[arXiv:2610.39543](https://arxiv.org/abs/2610.39543)，10-31 期已收录）检查点仓库，标注 MIT 与 vla / vlabench / robocasa / grpo 标签。**本次未核实是否为论文作者本人发布**，因此只作为"权重开始出现"的信号登记，不作为已验证的官方发布。
-- [ZJU-REAL/Worldline](https://github.com/ZJU-REAL/Worldline)：10-30 00:09 新建的 MIT 框架，把 RUA（Robot-Use Agent）与 CUA 的沙盒执行、并行 rollout、轨迹采集、验证器、蒸馏与训练（对接 verl）串成一条可复现流水线，基于 Embodied First Exam 的任务与评测协议。当前 0 star、无配套论文，定位是基础设施而非新算法；登记原因是它把"评测—采数据—训练—复评"做成了同一套任务定义，对做具身 agent 数据引擎的人有参考价值。
+**来源：** [项目仓库](https://github.com/ZJC25127/Retrieve-then-Steer) · [发布实现的提交](https://github.com/ZJC25127/Retrieve-then-Steer/commit/5d5e3915) · [对应旧论文](https://arxiv.org/abs/2605.10094)  
+**类型 / 评分：** open_source；75.5/100（77 / 74）  
+**事件时间：** 实现发布提交 2026-11-02 17:35:16 北京时间；仓库创建于同日 17:27:38。
+
+该仓库 README 自述为官方实现，作者名单与论文元数据一致；本次未额外交叉确认账号归属，按 T2 来源门槛处理（75.5 ≥ 75）。冻结 VLA 的成功前缀进入在线记忆，视觉检索与 DTW 过滤形成动作先验，再引导流匹配采样。与 Reflex 直接绕过策略主干不同，这里仍由原 VLA 细化动作，是适合对照的经验复用路线。仓库可见 π0.5 / LIBERO-10 的 baseline、memory+DTW 与 VLAC 评测入口、配置和运行结果；本次核验 README 与目录，未运行复现。Linux、GPU、CUDA、EGL 及独立的策略、仿真与 critic 环境是实际接入成本，模型检查点需另下。此项是**代码发布**，不将旧论文重新算作新投稿，也不单列同一事件中的图文和配置。
+
+#### DWARL：从 MuJoCo 训练到 Nav2 的局部控制器流程
+
+**来源：** [Nobleo Technology 仓库](https://github.com/nobleo/dwarl) · [初始实现提交](https://github.com/nobleo/dwarl/commit/52f99cef) · [官方文档](https://nobleo.github.io/dwarl/)  
+**类型 / 评分：** engineering_tech；72/100（73 / 71）  
+**事件时间：** 初始实现提交 2026-11-02 19:59:17 北京时间；仓库创建于同日 19:52:53。
+
+把差分驱动机器人的 RL 局部规划训练、MuJoCo/Gazebo 检查点评测及 ONNX 部署串成流程，仓库可见 ROS 2 Nav2 控制器插件和测试。它替换局部控制器，用户仍需提供机器人描述、传感器、驱动和定位；支持环境为 Linux x86-64。README 明确项目处于实验阶段，**不附带可直接用于高质量导航的预训练策略**，smoke 只检验流程。值得关注的是机器人配置与检查点兼容性流程，不将初始化仓库视为经过真机性能验证。
 
 ### 💬 社区信号
 
-- **CoRAct 的权重出现，但来源待确认。** 10-31 期日报记录"未确认公开代码"，11-01 出现上述 Hugging Face 检查点；如果它确实是作者发布，那么该工作的可复现性门槛会明显下降。当前它只有 1 个 like，且账号与该文 GitHub 项目页署名不一致，需要等作者确认后再当作官方权重。
-- **本期未发现独立复现、技术争议或第三方基准对比。** 对 PhysVLMM、JEDI、Probing Spatial State 三个标题做的检索只返回 arXiv 镜像页，没有 Hacker News、Reddit 或研究者博客讨论；UED 的代码库虽有 4 star，但没有 issue 或复现报告可引用。
+本次没有核验到同时满足时间、技术细节和来源门槛的独立社区条目。HN 的定量检索样本中，`robots.txt` 属于网络爬虫协议；关于机器人自主性的旧文章再讨论、产品新闻及次日北京时间发布的条目也未收录。X / Reddit 未获得完整覆盖，因此这里不能解释成当天没有技术讨论。
 
 ### 🔎 补充窗口筛选记录
 
-| 候选 | 实际提交时间（北京时间） | 处理与原因 |
+主窗口未核验到实际首次提交在 11 月 2 日的论文，原因是官方列表公告覆盖不足。33 条实际提交在补充窗口的候选中，29 条 PASS、4 条 BLOCK；PASS 均进行双评分，最终保留 11 篇，其余按门槛、排序或主题范围排除。下表时间均来自官方摘要页 v1 提交记录，并换算为北京时间；公告日期和编号月份不用于决定窗口。
+
+| 论文 | v1 北京时间 | 预筛 / 两轮分数 → 平均 | 结果与原因 |
+|---|---|---|---|
+| [Sensorium: An Open-Source Multimodal Data Collection and Curation Library for Embodied Surgical AI](https://arxiv.org/abs/2610.41946) | 2026-10-31 00:04:23 | PASS / 68、64 → 66 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [Language-Conditioned Behavioral Cloning for Autonomous Endoscope Guidance](https://arxiv.org/abs/2610.41978) | 2026-10-31 00:27:24 | PASS / 62、61 → 61.5 | 双评分低于T1入选门槛62 |
+| [Design and Validation of a Robotic Knee Exoskeleton with Musculoskeletal Simulation-Derived Biological Torque Control](https://arxiv.org/abs/2610.41981) | 2026-10-31 00:29:07 | PASS / 54、52 → 53 | 双评分低于T1入选门槛62 |
+| [Suspended-Fabric Robotic Manipulation Surfaces: Modelling, Design Space, and Multimodular Extensio](https://arxiv.org/abs/2610.41982) | 2026-10-31 00:31:16 | PASS / 50、48 → 49 | 双评分低于T1入选门槛62 |
+| [Nexus-VLA: Bridging Human and Robot Experiences via a Shared Hierarchical Semantic Latent Space](https://arxiv.org/abs/2610.42021) | 2026-10-31 00:53:26 | PASS / 70、67 → 68.5 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [GhostPrefix: Synchronization-Free Universal Prefix Attacks for ASR Manipulation](https://arxiv.org/abs/2610.42026) | 2026-10-31 00:55:28 | BLOCK | 语音攻击工作，不以机器人决策/控制为落点 |
+| [Proof-Carrying Evolution: Black-Box Search, White-Box Flight](https://arxiv.org/abs/2610.42043) | 2026-10-31 01:06:12 | PASS / 60、57 → 58.5 | 双评分低于T1入选门槛62 |
+| [A Hybrid Path Planning Framework for Assistive Wheelchair Navigation in Dynamic Pedestrian Environments](https://arxiv.org/abs/2610.42049) | 2026-10-31 01:16:59 | BLOCK | 普通轮椅路径规划，未见足够具身学习或通用方法贡献 |
+| [REA: A Routed Embodied Agent Runtime for Asynchronous Brain-Cerebellum Control](https://arxiv.org/abs/2610.42053) | 2026-10-31 01:18:13 | PASS / 62、60 → 61 | 双评分低于T1入选门槛62 |
+| [CausalWAM: Learning the Causes of Actions in World Action Models](https://arxiv.org/abs/2610.42096) | 2026-10-31 01:40:00 | PASS / 81、82 → 81.5 | 论文雷达 |
+| [ROOF: Learning Humanoid Fall Recovery under Overhead Constraints](https://arxiv.org/abs/2610.42097) | 2026-10-31 01:41:32 | PASS / 79、81 → 80 | 论文雷达 |
+| [Anchor 1: Precise and Stable Humanoid Control for Whole-Body Manipulation](https://arxiv.org/abs/2611.00193) | 2026-10-31 01:56:53 | PASS / 86、84 → 85 | 雷达最高两篇，已全文精读 |
+| [RoboArchitect: Automating the Design of Robotic Agents with Persistent Memory](https://arxiv.org/abs/2610.42141) | 2026-10-31 01:58:48 | PASS / 82、80 → 81 | 论文雷达 |
+| [Hierarchical World Models with Implicit Dynamics](https://arxiv.org/abs/2610.42146) | 2026-10-31 01:59:25 | PASS / 80、81 → 80.5 | 论文雷达 |
+| [Spectral and Conformal: Neural Network Methods for Calibrated Trajectory Prediction and Control-Point Intervals](https://arxiv.org/abs/2611.00231) | 2026-10-31 02:12:26 | PASS / 64、61 → 62.5 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [Supervised Autonomous Bimanual Suction and Cauterization for Bleeding Control in Low Grade Splenic Trauma](https://arxiv.org/abs/2611.00237) | 2026-10-31 02:18:29 | PASS / 64、62 → 63 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [Does Validation Loss Predict Real-Robot Success? Evidence from Four Imitation-Learning Policies on a Low-Cost Arm](https://arxiv.org/abs/2611.00283) | 2026-10-31 03:05:01 | PASS / 76、79 → 77.5 | 论文雷达 |
+| [Teach, Abstract, Apply: A Framework for Dialogue-Driven Task Learning with Collaborative Robots](https://arxiv.org/abs/2611.00297) | 2026-10-31 03:21:30 | PASS / 66、63 → 64.5 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [Catenary Visibility: A Geometric Framework for Planning with Tethered Robots](https://arxiv.org/abs/2611.00324) | 2026-10-31 03:47:20 | PASS / 56、53 → 54.5 | 双评分低于T1入选门槛62 |
+| [SPARK: Self-Correcting Embodied Memory via Physical Re-Observation](https://arxiv.org/abs/2611.00344) | 2026-10-31 04:24:55 | PASS / 78、77 → 77.5 | 论文雷达 |
+| [When appearance and motion disagree: evaluating class--motion consistency against disguised uncrewed surface vessels](https://arxiv.org/abs/2611.00367) | 2026-10-31 04:47:42 | BLOCK | 海上防御应用，不符合本期具身学习核心范围 |
+| [Emergent Control of Ant Learning Walks in a Mobile Robot](https://arxiv.org/abs/2611.00392) | 2026-10-31 05:16:30 | PASS / 56、54 → 55 | 双评分低于T1入选门槛62 |
+| [CalVLA: Shaping Native Confidence in Vision-Language-Action Policies with Outcome Supervision](https://arxiv.org/abs/2611.00394) | 2026-10-31 05:18:15 | PASS / 74、72 → 73 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [Behavior Graphs: Unsupervised Graph Structures for Interpreting Robot Deployment Data](https://arxiv.org/abs/2611.00405) | 2026-10-31 05:51:01 | PASS / 77、76 → 76.5 | 论文雷达 |
+| [TacMind: Benchmarking and Modeling Tactile Interaction States for Robotic Manipulation](https://arxiv.org/abs/2611.00455) | 2026-10-31 07:13:52 | PASS / 80、79 → 79.5 | 论文雷达 |
+| [A Straight Line Is Not a Camera Pose: Auditing Short-Clip Pose Benchmarks](https://arxiv.org/abs/2611.00482) | 2026-10-31 08:14:11 | PASS / 58、55 → 56.5 | 双评分低于T1入选门槛62 |
+| [Knowing Where to Look: Interactive Object Search via Spatial-Semantic Fusion](https://arxiv.org/abs/2611.00499) | 2026-10-31 08:41:39 | PASS / 69、68 → 68.5 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [MESSPa: A Multi-modal Embodiment Stimulation Shoulder Pad for Preserving the Sense of Agency in a Detachable Robotic Arm](https://arxiv.org/abs/2611.00509) | 2026-10-31 08:59:35 | PASS / 64、61 → 62.5 | 通过相关性门槛但本期排序靠后或范围较窄；不以数量要求收录 |
+| [WorldSketch: Sketching World Models for Zero-Shot Mobile Manipulation](https://arxiv.org/abs/2611.00513) | 2026-10-31 09:06:20 | PASS / 87、86 → 86.5 | 必读，已全文精读 |
+| [Behavioral Steering of Vision-Language-Action Models in the Low-Parameter Regime](https://arxiv.org/abs/2611.00522) | 2026-10-31 09:23:01 | PASS / 63、60 → 61.5 | 双评分低于T1入选门槛62 |
+| [Reflex: Fast Robot Policy Serving by Reusing and Correcting Past Actions](https://arxiv.org/abs/2611.00524) | 2026-10-31 09:28:56 | PASS / 86、85 → 85.5 | 雷达最高两篇，已全文精读 |
+| [3D Neural Rendering for Automated Ultrasonic Laser Scans](https://arxiv.org/abs/2611.00527) | 2026-10-31 09:32:31 | BLOCK | 超声扫描测量应用，未提供所需机器人决策方法增量 |
+| [Faster Imitation by Re-timing Demonstrations Within the Controller Limit](https://arxiv.org/abs/2611.00539) | 2026-10-31 09:52:25 | PASS / 57、55 → 56 | 双评分低于T1入选门槛62 |
+
+<details>
+<summary>展开 121 条窗口外候选的提交时间与排除记录</summary>
+
+只按 v1 实际提交时间归属窗口；近期公告、替换版本或媒体再报道不改变首次提交日期。以下均早于 2026-10-31 00:00 北京时间，未作为本期新投稿。
+
+| 候选论文 | v1 北京时间 | 排除原因 |
 |---|---|---|
-| [PhysVLMM](https://arxiv.org/abs/2610.40539) | 10-30 01:35 | 入「今日必读」；18 户真实门/抽屉 + 120 仿真厨房，证据最强。 |
-| [JEDI](https://arxiv.org/abs/2610.40356) | 10-30 00:11 | 入「今日必读」；ICIL 压缩目标 + 多演示与过程跟随证据。 |
-| [Probing Spatial State](https://arxiv.org/abs/2610.40636) | 10-30 01:58 | 入「今日必读」；四层探针与两个负结果，分析价值高。 |
-| [UED on Quadrupeds](https://arxiv.org/abs/2610.40364) | 10-30 00:15 | 入雷达并精读；14 种课程法统一协议，"简单起点"结论有信息量。 |
-| [DAWN](https://arxiv.org/abs/2610.40537) | 10-30 01:35 | 入雷达；真机接触富任务，但单任务族、演示少、缺绝对成功率。 |
-| [DEED](https://arxiv.org/abs/2610.40430) | 10-30 00:51 | 约 53.5 分，低于 T1 门槛；CoRL 2026 RoboFineMani workshop 挑战赛方案，主要是演示扩增与执行工程，方法增量有限。 |
-| [TouchBridge](https://arxiv.org/abs/2610.40349) | 10-30 00:06 | 10-30 期「今日必读」已收录，去重。 |
-| [HiFOR](https://arxiv.org/abs/2610.40373) | 10-30 00:21 | 10-30 期已收录，去重。 |
-| [CoAWM](https://arxiv.org/abs/2610.40401) | 10-30 00:34 | 10-30 期已收录，去重。 |
-| [BURGER](https://arxiv.org/abs/2610.40532) | 10-30 01:34 | 10-30 期已收录，去重。 |
-| [Gym-Anything](https://arxiv.org/abs/2610.40565) | 10-30 01:42 | 10-30 期已收录，去重。 |
-| [SymAnt](https://arxiv.org/abs/2610.40632) | 10-30 01:58 | 10-30 期已收录，去重。 |
-| [world2vec](https://arxiv.org/abs/2610.40637) | 10-30 01:58 | 10-30 期已收录，去重。 |
-| [SwapBot](https://arxiv.org/abs/2610.40646) | 10-30 01:59 | 10-30 期「今日必读」已收录，去重。 |
-| [Wizard](https://arxiv.org/abs/2610.40339) | 10-30 00:03 | 排除：游戏世界模型的角色动作控制，无物理具身与决策落点。 |
-| [Securing the Robotics Supply Chain](https://arxiv.org/abs/2610.40385) | 10-30 00:26 | 排除：政策与投资议程文章，无技术方法。 |
-| [SCARL](https://arxiv.org/abs/2610.40407) | 10-30 00:38 | 排除：通用 RL 对齐方法，无机器人实验。 |
-| [socx](https://arxiv.org/abs/2610.40427) | 10-30 00:50 | 排除：JAX 机会约束最优控制库，是工具而非新的具身学习方法。 |
-| [UFLD](https://arxiv.org/abs/2610.40421) | 10-30 00:45 | 排除：晶圆缺陷检测，非机器人。 |
-| [Algebraic World Model](https://arxiv.org/abs/2610.40503) | 10-30 01:20 | 排除：形式化数学证明环境，"world model"非物理具身含义。 |
-| [Two-Wheeled Quadrotor](https://arxiv.org/abs/2610.40502) | 10-30 01:20 | 排除：机构与硬件设计，无学习方法。 |
-| [Shape Servoing Tutorial](https://arxiv.org/abs/2610.40559) | 10-30 01:40 | 排除：教程 Part I，非新研究。 |
-| [Continuum Robot Conveyor](https://arxiv.org/abs/2610.40600) | 10-30 01:50 | 排除：机构硬件。 |
-| [Fight World Model](https://arxiv.org/abs/2610.40607) | 10-30 01:53 | 排除：格斗游戏视频生成，无 action-conditioned 决策落点。 |
-| [VLA 该多信任自己的推理](https://arxiv.org/abs/2610.40002) | 10-29 21:20 | 窗口外（早于 10-30 00:00），按规则不计入；两期日报均未刊载，留待后续回看。 |
-| [PASA-KV](https://arxiv.org/abs/2610.39816) | 10-29 18:58 | 窗口外；世界动作模型的动作视觉通路攻击，值得后续单独评估。 |
-| [When More Planning Hurts](https://arxiv.org/abs/2610.37891) | 10-28 03:32 | 窗口外；世界模型上学到的规划器负结果。 |
-| [11-01 全天投稿](https://arxiv.org/list/cs.RO/recent) | 未公告 | 周日无公告批次，API 查询窗口内 0 条，无法检查，不写成"无资讯"。 |
+| [Adaptive Coverage Algorithms for Mobile Ad Hoc Networks in Dynamic Worlds](https://arxiv.org/abs/2610.41936) | 2026-10-30 23:57:29 | 首次提交在窗口之外 |
+| [Online Learning of Heterogeneous Locomotion Dynamics under Reinforcement Learning Policies for Precise Loco-Manipulation](https://arxiv.org/abs/2610.41892) | 2026-10-30 23:34:35 | 首次提交在窗口之外 |
+| [Movens-Zero: Scaling Humanoid Motion Foundation Models with Large-Scale Human Videos](https://arxiv.org/abs/2610.41877) | 2026-10-30 23:25:49 | 首次提交在窗口之外 |
+| [Learning to Live: A Step Toward Lifelong Embodied Intelligence](https://arxiv.org/abs/2611.00180) | 2026-10-30 23:23:52 | 首次提交在窗口之外 |
+| [META-Robot: Self-Cognition and Capability Scaling in Agentic Robots](https://arxiv.org/abs/2610.41868) | 2026-10-30 23:19:31 | 首次提交在窗口之外 |
+| [When the Simulator Fails, Not the Policy: Auditing Contact Artifacts in Simulated Robot Benchmarks](https://arxiv.org/abs/2610.41857) | 2026-10-30 23:13:11 | 首次提交在窗口之外 |
+| [SketchMate: Agentic Geometric Reasoning for Zero-Shot Precision Insertion](https://arxiv.org/abs/2610.41844) | 2026-10-30 22:59:43 | 首次提交在窗口之外 |
+| [Integrating Low-Thrust Transfer Dynamics into POMDP Planning for On-Orbit Servicing](https://arxiv.org/abs/2610.41839) | 2026-10-30 22:55:29 | 首次提交在窗口之外 |
+| [PGGT-Loc: Primitive-Grounded Geometry Transformer for Feed-Forward Camera Localization](https://arxiv.org/abs/2610.41833) | 2026-10-30 22:50:55 | 首次提交在窗口之外 |
+| [WorkIng: A Real-World and Synthetic Highway Work-Zone Benchmark Dataset for Autonomous Navigation](https://arxiv.org/abs/2610.41772) | 2026-10-30 22:11:34 | 首次提交在窗口之外 |
+| [Visual-Inertial RGB-D SLAM with Encoders for a Differential Wheeled Robot](https://arxiv.org/abs/2610.41768) | 2026-10-30 22:09:58 | 首次提交在窗口之外 |
+| [Higher-Order Kinematic Derivatives for Aspect-Preserving Real-Time Numerical Inverse Kinematics](https://arxiv.org/abs/2610.41752) | 2026-10-30 21:55:16 | 首次提交在窗口之外 |
+| [When Architectural Spaces Start to Act](https://arxiv.org/abs/2610.41724) | 2026-10-30 21:34:30 | 首次提交在窗口之外 |
+| [Flexibility-Aware Robotic Manipulation: Deformation Estimation, Kinematics, and Control via Distributed Inertial Measurement](https://arxiv.org/abs/2610.41702) | 2026-10-30 21:06:54 | 首次提交在窗口之外 |
+| [When the Past Shapes Action: Understanding Embodied Memory](https://arxiv.org/abs/2610.41688) | 2026-10-30 20:52:37 | 首次提交在窗口之外 |
+| [Biomechanics do not predict perceptual and cognitive consequences of force augmentation](https://arxiv.org/abs/2610.41679) | 2026-10-30 20:47:21 | 首次提交在窗口之外 |
+| [Interaction-Aware Sampling-Based Motion Planning for Autonomous Surface Vessels in Urban Waterways](https://arxiv.org/abs/2610.41676) | 2026-10-30 20:44:27 | 首次提交在窗口之外 |
+| [OpenVIO: A Versatile Open-Source Visual-Inertial Odometry System](https://arxiv.org/abs/2610.41671) | 2026-10-30 20:40:10 | 首次提交在窗口之外 |
+| [GPU-accelerated Incremental Euclidean Distance Transform for Online Motion Planning of Mobile Robots](https://arxiv.org/abs/2610.41667) | 2026-10-30 20:35:49 | 首次提交在窗口之外 |
+| [ResMerge: Residual Policy Learning and Merging for Continual Adaptation of Pre-trained Robot Policies](https://arxiv.org/abs/2610.41663) | 2026-10-30 20:33:47 | 首次提交在窗口之外 |
+| [$\nabla$Mimic: Ultra-Efficient Humanoid Control with Differentiable Simulation](https://arxiv.org/abs/2610.41654) | 2026-10-30 20:27:45 | 首次提交在窗口之外 |
+| [Direct Action-Manifold Modeling for Efficient and Robust Bimanual Manipulation](https://arxiv.org/abs/2610.41643) | 2026-10-30 20:17:46 | 首次提交在窗口之外 |
+| [RTPolicy: Real-Time (32.9 Hz) Multi-View Visuomotor Policy for Robotic Manipulation on Edge Devices](https://arxiv.org/abs/2610.41625) | 2026-10-30 20:01:49 | 首次提交在窗口之外 |
+| [VLA Policies Do Not Know When Not to Act: Unintended Task Execution and Start Suppression](https://arxiv.org/abs/2610.41609) | 2026-10-30 19:45:50 | 首次提交在窗口之外 |
+| [DrawSplat: Atlanta World-Guided Implicit Gaussian SLAM for Indoor Reconstruction](https://arxiv.org/abs/2610.41602) | 2026-10-30 19:35:14 | 首次提交在窗口之外 |
+| [A complete analytical characterization of optimal collision-free motion for two robots](https://arxiv.org/abs/2610.41558) | 2026-10-30 18:53:31 | 首次提交在窗口之外 |
+| [Contact-based optimization for collision-free motion planning for a million robots](https://arxiv.org/abs/2610.41548) | 2026-10-30 18:46:26 | 首次提交在窗口之外 |
+| [FOCUS: First-Order Control Using Optimal Transport Supervision for Imitation from Observations](https://arxiv.org/abs/2610.41540) | 2026-10-30 18:37:43 | 首次提交在窗口之外 |
+| [AC-SMPC: Differentiable Actor--Critic MPC with State Constraints for Safe and Fast Robot Navigation](https://arxiv.org/abs/2610.41477) | 2026-10-30 17:28:23 | 首次提交在窗口之外 |
+| [SAFARI: Semantic- And Frontier-driven Autonomous Risk Inspection](https://arxiv.org/abs/2610.41456) | 2026-10-30 17:01:50 | 首次提交在窗口之外 |
+| [Beyond Trial-and-Error: A Geospatial-Guided Active Reasoning Framework for Robust Aerial Vision-and-Language Navigation](https://arxiv.org/abs/2610.41446) | 2026-10-30 16:50:07 | 首次提交在窗口之外 |
+| [Scaling Trusted Autonomy: Towards Generally Capable Verifiable Robots](https://arxiv.org/abs/2611.00158) | 2026-10-30 16:49:42 | 首次提交在窗口之外 |
+| [Physically Constrained Kinematic Calibration for High-Precision Robotic Needle Guidance](https://arxiv.org/abs/2610.41429) | 2026-10-30 16:35:37 | 首次提交在窗口之外 |
+| [SACQ: Structure-Aware Codebook Quantization for Ultra-Low-Bit Vision-Language-Action Models](https://arxiv.org/abs/2610.41408) | 2026-10-30 16:19:50 | 首次提交在窗口之外 |
+| [From Concepts to Actual Causes: Toward Closing the Concept-Malfunction Gap in Robot Foundation Models](https://arxiv.org/abs/2611.00155) | 2026-10-30 15:57:06 | 首次提交在窗口之外 |
+| [BioAgent: Self-Directed Skill Acquisition and Capability Growth for Long-Horizon Laboratory Protocols](https://arxiv.org/abs/2610.41383) | 2026-10-30 15:47:08 | 首次提交在窗口之外 |
+| [MolmoSpaces-CommonSense: Evaluating Commonsense in Robotic Manipulation Policies](https://arxiv.org/abs/2610.41377) | 2026-10-30 15:42:42 | 首次提交在窗口之外 |
+| [DiffWBC: Unlocking Steerable General Humanoid Motion Tracking via One-Step Diffusion Whole-Body Control](https://arxiv.org/abs/2610.41354) | 2026-10-30 15:16:01 | 首次提交在窗口之外 |
+| [CalibSwitch: Observation-Driven Camera-LiDAR Extrinsic Recovery and Selective Maintenance for Multimodal Perception](https://arxiv.org/abs/2610.41352) | 2026-10-30 15:14:52 | 首次提交在窗口之外 |
+| [Geometry-Aware Humanoid Retargeting via Manifold ODEs](https://arxiv.org/abs/2610.41349) | 2026-10-30 15:06:57 | 首次提交在窗口之外 |
+| [Joint-Health-Aware Reinforcement Learning for Robust Robot Control Under Actuator Degradation](https://arxiv.org/abs/2610.41348) | 2026-10-30 15:05:58 | 首次提交在窗口之外 |
+| [HandMimicX: Learning Human-Like Dexterous Manipulation via an Object-Centric Policy from Egocentric Videos](https://arxiv.org/abs/2610.41336) | 2026-10-30 14:51:27 | 首次提交在窗口之外 |
+| [HIPC: Humanoid Iterative Planning and Control via Goal-Conditioned Motion Closure](https://arxiv.org/abs/2610.41334) | 2026-10-30 14:48:20 | 首次提交在窗口之外 |
+| [Cross-Embodiment Motion Planning by Coupling Body-Agnostic World Model with Differentiable Ego-Dynamics](https://arxiv.org/abs/2610.41330) | 2026-10-30 14:45:17 | 首次提交在窗口之外 |
+| [Learning from Physical Experience:Context-Space Adaptation for Robotic Manipulation](https://arxiv.org/abs/2610.41320) | 2026-10-30 14:32:51 | 首次提交在窗口之外 |
+| [TRACE: Target-State Risk-Aligned Conditional Execution for Embodied Tracking](https://arxiv.org/abs/2610.41275) | 2026-10-30 13:26:41 | 首次提交在窗口之外 |
+| [SPT-Flow: One Integration, Many Futures in Continuous-Time World Models](https://arxiv.org/abs/2610.41273) | 2026-10-30 13:26:15 | 首次提交在窗口之外 |
+| [CONSORT: Uncertainty-Constrained Multi-Robot Planning for Cooperative Localization in GPS-Denied Environments](https://arxiv.org/abs/2610.41235) | 2026-10-30 12:18:51 | 首次提交在窗口之外 |
+| [TinyAstral: Transferring Self-Evolving Harnesses to Tiny Generalist Manipulation Agents](https://arxiv.org/abs/2610.41216) | 2026-10-30 11:53:42 | 首次提交在窗口之外 |
+| [Capability-Conditioned Graph Control Barrier Functions for Zero-Shot Safe Navigation of Heterogeneous Mobile Robot Teams](https://arxiv.org/abs/2610.41214) | 2026-10-30 11:52:02 | 首次提交在窗口之外 |
+| [FlowMoDE: Coarse-to-fine Flow Matching for Detail-aware Sim-to-Real Monocular Depth Estimation](https://arxiv.org/abs/2610.41190) | 2026-10-30 11:13:53 | 首次提交在窗口之外 |
+| [A Capability-Aware Backup-Recoverability Filter for Heterogeneous Multi-Robot Navigation](https://arxiv.org/abs/2610.41188) | 2026-10-30 11:11:02 | 首次提交在窗口之外 |
+| [Mechanistic Interpretability for End-to-End Self-Driving](https://arxiv.org/abs/2610.41185) | 2026-10-30 11:05:24 | 首次提交在窗口之外 |
+| [One Verdict Is Not Enough: Regression Testing Learned World Models and Their Test Harnesses](https://arxiv.org/abs/2610.41130) | 2026-10-30 09:36:37 | 首次提交在窗口之外 |
+| [MotorSense: A Video-EMG Dataset of Motoric Representations for Action Understanding](https://arxiv.org/abs/2610.41127) | 2026-10-30 09:32:19 | 首次提交在窗口之外 |
+| [Veloxity: Towards Memory-Safe UAV Embedded Firmware using the Rust Programming Language](https://arxiv.org/abs/2610.41053) | 2026-10-30 06:51:34 | 首次提交在窗口之外 |
+| [Consensus Within, Competition Between: Decentralized LLM Teams for Perimeter Defense](https://arxiv.org/abs/2610.41044) | 2026-10-30 06:34:13 | 首次提交在窗口之外 |
+| [Before We Adapt: The Zero-Shot Generalization Bottleneck in Continual World Models](https://arxiv.org/abs/2610.41041) | 2026-10-30 06:32:09 | 首次提交在窗口之外 |
+| [Dreams Are Cheaper Than Flights: Curated World-Model Data Improves Aerial Detection](https://arxiv.org/abs/2610.41030) | 2026-10-30 06:17:32 | 首次提交在窗口之外 |
+| [Contact Imitation Interface: Transferring Dexterous Skills by Showing How Contact Unfolds](https://arxiv.org/abs/2610.41028) | 2026-10-30 06:14:31 | 首次提交在窗口之外 |
+| [Density-Guided Bootstrap Boundaries for Latent World-Model Reinforcement Learning](https://arxiv.org/abs/2610.41022) | 2026-10-30 06:05:09 | 首次提交在窗口之外 |
+| [CuPIQP: A Batched and Differentiable QP Solver on GPUs for Robot Learning and Control](https://arxiv.org/abs/2610.41021) | 2026-10-30 06:04:05 | 首次提交在窗口之外 |
+| [STAR: Steering Action Representations during Inference](https://arxiv.org/abs/2610.41009) | 2026-10-30 05:42:17 | 首次提交在窗口之外 |
+| [Let LiDAR Decide Where to Look: Geometry-Measured Token Selection for Efficient Sparse Latent World Models](https://arxiv.org/abs/2610.40935) | 2026-10-30 04:11:34 | 首次提交在窗口之外 |
+| [Agentic World Modeling for Agent Test-time Scaling without Environment Replica](https://arxiv.org/abs/2610.40927) | 2026-10-30 03:55:18 | 首次提交在窗口之外 |
+| [Confidence-Modulated Safety Filtering for End-to-End Policies](https://arxiv.org/abs/2610.40922) | 2026-10-30 03:48:12 | 首次提交在窗口之外 |
+| [Robot Navigation and Canine Welfare: A Pilot Study Surfacing Challenges for Cross-Species Legibility and Proxy Validity in Animal-Machine Interaction](https://arxiv.org/abs/2610.40921) | 2026-10-30 03:47:29 | 首次提交在窗口之外 |
+| [FlapSim: A Composable MuJoCo Simulation Platform and Reduced-Order Aerodynamic Model Hierarchy for Flapping-Wing Robotics](https://arxiv.org/abs/2610.40902) | 2026-10-30 03:25:20 | 首次提交在窗口之外 |
+| [AquaProbe: Efficient Adaptation of Frozen Vision Models for Underwater Images](https://arxiv.org/abs/2610.40900) | 2026-10-30 03:22:03 | 首次提交在窗口之外 |
+| [Frozen in Time: How a Physics Foundation Model Forgets Under Sim-to-Real Adaptation](https://arxiv.org/abs/2610.40857) | 2026-10-30 02:36:42 | 首次提交在窗口之外 |
+| [How a group that cannot communicate knows itself by its enemy](https://arxiv.org/abs/2610.40835) | 2026-10-30 02:15:13 | 首次提交在窗口之外 |
+| [Spatial Atlas-Informed Loss Ensembles for Whole-Body PSMA PET/CT Metastasis Segmentation](https://arxiv.org/abs/2610.40834) | 2026-10-30 02:14:49 | 首次提交在窗口之外 |
+| [From Teleoperation to Long-Horizon Dexterity: Evaluating Visuomotor Skills and Offline Proxies for Dexterous Manipulation](https://arxiv.org/abs/2610.40828) | 2026-10-30 02:07:37 | 首次提交在窗口之外 |
+| [CaPtain: A Pipeline for Post-Training Code-as-Policy Robot Agents](https://arxiv.org/abs/2610.40799) | 2026-10-30 02:01:07 | 首次提交在窗口之外 |
+| [Beyond Plausible Prediction: Safety Sufficiency in Web World Models](https://arxiv.org/abs/2610.40798) | 2026-10-30 02:00:55 | 首次提交在窗口之外 |
+| [Algebraic World Model: From Exploration to Proofs](https://arxiv.org/abs/2610.40503) | 2026-10-30 01:20:31 | 首次提交在窗口之外 |
+| [WorldBridge: Bridging Video and Action for Task Generalization in World Action Models](https://arxiv.org/abs/2610.40748) | 2026-10-30 00:00:06 | 首次提交在窗口之外 |
+| [MUSBRIC: LEGO-Compatible Pneumatic Muscle Bricks for Reconfigurable Musculoskeletal Robots](https://arxiv.org/abs/2610.40285) | 2026-10-29 23:36:22 | 首次提交在窗口之外 |
+| [LOGIV: Graph-Verified Execution with Causal Local Repair for Long-Horizon Robot Tasks](https://arxiv.org/abs/2610.40016) | 2026-10-29 21:30:16 | 首次提交在窗口之外 |
+| [GROME: GROunding Factorized MEmory into Video World Models](https://arxiv.org/abs/2610.39812) | 2026-10-29 18:54:32 | 首次提交在窗口之外 |
+| [OpenFlyV2: An onboard vision-language-action model for aerial perception and navigation](https://arxiv.org/abs/2610.39287) | 2026-10-29 11:35:30 | 首次提交在窗口之外 |
+| [Seeing and Imagining as One: Unified Video Generation and 4D Perception for Embodied World Modeling](https://arxiv.org/abs/2610.39232) | 2026-10-29 10:50:17 | 首次提交在窗口之外 |
+| [Actuator-Aware Observer Inputs for Cascade ADRC of Quadrotors Under Rotor Lag, Measurement Delay and Sensor Noise](https://arxiv.org/abs/2610.39126) | 2026-10-29 09:17:55 | 首次提交在窗口之外 |
+| [SimRetract: Zero-Shot Sim-to-Real Robotic Assistance for Retractor Take-Over in Open Surgery](https://arxiv.org/abs/2610.38234) | 2026-10-28 11:36:24 | 首次提交在窗口之外 |
+| [PDRVLA: A Vision-Language-Action Model with Physical Dynamics Representations](https://arxiv.org/abs/2610.37381) | 2026-10-27 23:09:10 | 首次提交在窗口之外 |
+| [When Is a Relation Worth Trusting? Manipulation Costs, Exposure, and the Trust Trap in Multi-Relational Graph Learning](https://arxiv.org/abs/2610.37239) | 2026-10-27 21:43:56 | 首次提交在窗口之外 |
+| [MOON: Learning When to Forget and How to Move On in Vision-and-Language Navigation](https://arxiv.org/abs/2610.33546) | 2026-10-24 16:50:29 | 首次提交在窗口之外 |
+| [Dispersive Tree Agreements for Multi-Robot Coordination](https://arxiv.org/abs/2610.31540) | 2026-10-23 00:48:09 | 首次提交在窗口之外 |
+| [Do Earth-Trained Humanoid Controllers Walk on the Moon? Gravity, Terrain, and Soil Transfer](https://arxiv.org/abs/2610.30080) | 2026-10-22 01:28:57 | 首次提交在窗口之外 |
+| [Learning Goal-Conditioned Subgoals through Frozen Hierarchical World Models](https://arxiv.org/abs/2610.26179) | 2026-10-19 19:13:02 | 首次提交在窗口之外 |
+| [Learning from Fleet Experience: Collective Experience Learning Across 96 Robots](https://arxiv.org/abs/2610.25736) | 2026-10-19 11:41:27 | 首次提交在窗口之外 |
+| [From Prediction to Action: Population Health World Model for Digital Medicine](https://arxiv.org/abs/2610.24662) | 2026-10-17 20:34:53 | 首次提交在窗口之外 |
+| [Self-Building Labs](https://arxiv.org/abs/2610.23826) | 2026-10-17 01:48:29 | 首次提交在窗口之外 |
+| [TacClaw-Infinity: A Large-Scale Vision-Tactile-Language-Action Dataset for Dexterous Manipulation](https://arxiv.org/abs/2610.20320) | 2026-10-14 23:06:53 | 首次提交在窗口之外 |
+| [I3L: Iterative Interactive Imitation Learning for Whole-Body Mobile Manipulation](https://arxiv.org/abs/2610.17748) | 2026-10-13 13:28:59 | 首次提交在窗口之外 |
+| [Detect and Suppress: A Mechanistic Defense against Adversarial Patches in VLA Models](https://arxiv.org/abs/2610.03498) | 2026-10-02 23:57:04 | 首次提交在窗口之外 |
+| [FORCE: Factorized Object Relations for Counterfactual Editing in Video World Models](https://arxiv.org/abs/2611.00023) | 2026-10-02 10:52:17 | 首次提交在窗口之外 |
+| [Denoising Multirobot Trajectories](https://arxiv.org/abs/2609.35651) | 2026-09-29 01:18:58 | 首次提交在窗口之外 |
+| [Compressed delayed-information projection for six-degree-of-freedom underwater vehicle navigation under delayed acoustic positioning](https://arxiv.org/abs/2609.27439) | 2026-09-23 15:02:33 | 首次提交在窗口之外 |
+| [Learning and Transferring Closed-Loop Robot Software](https://arxiv.org/abs/2609.19906) | 2026-09-17 16:51:12 | 首次提交在窗口之外 |
+| [SV-WAM: An Efficient Surround-View World-Action Model for End-to-End Autonomous Driving](https://arxiv.org/abs/2609.03602) | 2026-09-03 17:47:51 | 首次提交在窗口之外 |
+| [Keeping the Franka Emika Panda alive: a ROS 2 stack with a reliable position interface](https://arxiv.org/abs/2608.19740) | 2026-08-20 15:37:48 | 首次提交在窗口之外 |
+| [Adaptive-WAM: Quality-Guided Early-Exit Planning from Intermediate Video-Diffusion Features](https://arxiv.org/abs/2608.06008) | 2026-08-06 21:13:07 | 首次提交在窗口之外 |
+| [UniCross: Unified Cross-Skill Dexterous Manipulation Synthesis](https://arxiv.org/abs/2607.28198) | 2026-07-30 21:35:45 | 首次提交在窗口之外 |
+| [Decompose and Reorganize: Planning with Primitives and Visuomotor Policies Learned from Demonstrations](https://arxiv.org/abs/2607.25397) | 2026-07-28 15:57:09 | 首次提交在窗口之外 |
+| [More than a Manipulator: Planning Propellant-Free Attitude Maneuvers for Free-Floating Spacecraft](https://arxiv.org/abs/2607.12130) | 2026-07-14 04:27:09 | 首次提交在窗口之外 |
+| [Sequential Planning via Anchored Robotic Keypoints](https://arxiv.org/abs/2606.30613) | 2026-06-30 01:48:01 | 首次提交在窗口之外 |
+| [VEGA: Learning Navigation VLAs from In-the-Wild Egocentric Video with Geometric Trajectory Supervision](https://arxiv.org/abs/2606.18426) | 2026-06-17 03:21:14 | 首次提交在窗口之外 |
+| [Rapid co-design of Buoyancy-assisted robots for Challenging Locomotion using Gaussian Evolutionary Specialists](https://arxiv.org/abs/2606.07424) | 2026-06-06 00:18:15 | 首次提交在窗口之外 |
+| [NDPP-Grasp: Non-Differentiable Physical Plausibility Constraint-Guided Task-Oriented Dexterous Grasp Generation](https://arxiv.org/abs/2606.02432) | 2026-06-02 00:06:14 | 首次提交在窗口之外 |
+| [TacO: Benchmarking Tactile Sensors for Object Manipulation](https://arxiv.org/abs/2605.21976) | 2026-05-21 12:11:03 | 首次提交在窗口之外 |
+| [Dynamic Control Barrier Function Regulation with Vision-Language Models for Safe, Adaptive, and Realtime Visual Navigation](https://arxiv.org/abs/2603.21142) | 2026-03-22 17:35:18 | 首次提交在窗口之外 |
+| [Specification-Aware Distribution Shaping for Robotics Foundation Models](https://arxiv.org/abs/2603.17969) | 2026-03-19 01:36:46 | 首次提交在窗口之外 |
+| [FlowTouch: View-Invariant Visuo-Tactile Prediction](https://arxiv.org/abs/2603.08255) | 2026-03-09 19:24:29 | 首次提交在窗口之外 |
+| [$\pi$-StepNFT: Wider Space Needs Finer Steps in Online RL for Flow-based VLAs](https://arxiv.org/abs/2603.02083) | 2026-03-03 01:04:49 | 首次提交在窗口之外 |
+| [CHOP: Counterfactual Human Preference Labels Improve Obstacle Avoidance in Visuomotor Navigation Policies](https://arxiv.org/abs/2603.02004) | 2026-03-02 23:55:03 | 首次提交在窗口之外 |
+| [WildOS: Open-Vocabulary Object Search in the Wild](https://arxiv.org/abs/2602.19308) | 2026-02-23 03:14:00 | 首次提交在窗口之外 |
+| [Natural Language Actor-Critic: Scalable Off-Policy Learning in Language Space](https://arxiv.org/abs/2512.04601) | 2025-12-04 17:21:44 | 首次提交在窗口之外 |
+| [Reflection-Based Relative Localization for Cooperative UAV Teams Using Active Markers](https://arxiv.org/abs/2511.17166) | 2025-11-21 19:34:08 | 首次提交在窗口之外 |
+| [EquiContact: A Hierarchical SE(3) Vision-to-Force Equivariant Policy for Spatially Generalizable Contact-rich Tasks](https://arxiv.org/abs/2507.10961) | 2025-07-15 11:45:26 | 首次提交在窗口之外 |
+| [Shared Modular Recurrence in Contextual MDPs for Universal Morphology Control](https://arxiv.org/abs/2506.08630) | 2025-06-10 17:44:30 | 首次提交在窗口之外 |
+
+</details>
+
 
 ### 📊 今日技术趋势
 
-今天能核验的三条线都围绕"状态的可用性"而不是模型规模。第一条是把物理状态变成可查询、可校准的量：PhysVLMM 让地图对每个可动部件保留后验并在风险不可控时弃权，Probing Spatial State 则证明视觉基础模型的"可读出"并不等于"能维持、能用来行动"。第二条是压缩的信息论转向：JEDI 不再问压缩器长什么样，而是问压缩后的槽能否预测自己这条 episode 的下一阶段，把"保留执行过程"变成可检验的目标。第三条是评测的冷静化：UED 在 5 个四足上发现"简单起点"常常进入 top group，且分布内领先者在 held-out 地形上会换人。
+本期可验证材料把“经验复用”分成了直接缓存动作与检索后引导生成两条路线，两者应同时评估控制误差、刷新成本和成功率。另一条值得跟进的设计是给大模型与控制器之间增加可检查接口：WorldSketch 用稀疏运动学假设，Anchor 1 用校准姿态和独立纠错。它们的强结果分别受真实深度噪声、缓存分布变化和接触稳定性限制，下一步比较需要把这些边界放到同一套评测协议里。
 
-本期的方法证据形态比前两期弱一档：PhysVLMM 有 18 户真实数据但与可微仿真对比、无代码；JEDI 有 4 个仿真套件加 5 个真机任务、无代码；Probing 只有单训练种子且部分场景与 Fast3R 训练集重叠；UED 与 DAWN 分别缺真机迁移与绝对成功率。四篇精读都没有执行训练或机器人实验，数字均来自论文。
+### 来源覆盖与精读状态
 
-### 检索覆盖与精读状态
-
-- **官方 arXiv 召回：** 直接抓取 [cs.RO recent](https://arxiv.org/list/cs.RO/recent)（485 条）、[cs.AI recent](https://arxiv.org/list/cs.AI/recent)（1,497 条）、[cs.LG recent](https://arxiv.org/list/cs.LG/recent)（1,438 条）与 [cs.CV recent](https://arxiv.org/list/cs.CV/recent)（926 条），并核对四个分类的 `/new` 页。最新公告日为 2026-10-30（周五），其后无新批次；用 arXiv API 逐条取 v1 时间戳后，落在补充窗口 [2026-10-30 00:00, 2026-11-01 23:59] 的条目共 46 条（去重后 33 篇），其中 8 篇已由 10-30/10-31 两期收录。**主窗口 11-01 无公告批次，这是本期最大来源缺口。**
-- **机构与会议：** Google DeepMind blog 未见 10-30 之后的新条目（Gemini Robotics ER 2 上云公告发布于 10-28 的 Google Cloud blog，不在窗口）；Physical Intelligence blog 最新为 10-13 的 Pi API beta；Figure news 最新 9-30；1X discover 最新 7-09；RAI Institute 最新 10-28；NVIDIA GEAR 未列新发布；未发现 10-30 至 11-01 的新研究发布。
-- **工程与社区：** GitHub 新建仓库检索在 10-29 之后的新库里只找到个人主页、课程整理与微调检查点，没有独立算法/权重发布；核对 UED、Probing、CoRAct 三个配套仓库与 Hugging Face 检查点，均未见独立复现或技术争议。仿真器侧无新版本：Isaac Lab 最新 10-20、MuJoCo 3.17.0 于 10-22、Genesis v1.4.5 于 10-22。
-- **精读：** [索引](paper-reading/news/2026-11-01/README.md)。必读 3 篇 + 雷达最高 1 篇，共 4 篇；均为完整全文提取，grounding、八项笔记 lint、质量与可读性审查、原脚本正式保存及 SHA-256 全部通过。本次未执行训练、推理或机器人实验。
+- **arXiv：** 直接抓取 cs.RO、cs.AI、cs.LG、cs.CV 的 official recent、new 及 11 月份列表，并补查 export 入口。recent 条目数分别为 488、1454、1431、914；关键词预筛并去重后逐条核验 154 个候选的标题、作者、摘要与所有版本时间，33 条在补充窗口、121 条在窗口外。11 月份 AI/LG 页明确显示暂无该期更新；recent/new 最新批次仍标为 11 月 2 日，**不能证明已覆盖 11 月 2 日实际投稿**。交叉分类关键词预筛也存在漏检风险。
+- **机构：** 访问了 [NVIDIA GEAR](https://research.nvidia.com/labs/gear/)、[Physical Intelligence](https://www.pi.website/blog)、[DeepMind](https://deepmind.google/blog/)、[1X](https://www.1x.tech/discover)、[Figure](https://www.figure.ai/news)、[RAI](https://rai-inst.com/)、[TRI](https://www.tri.global/news)、[Stanford REAL](https://real.stanford.edu/)、[BAIR](https://bair.berkeley.edu/blog/)、[MIT Robotics](https://news.mit.edu/topic/robotics)及机器人厂商页面。仅将网页可访问与日期核验分开记录；GEAR 论文列表的动态内容未完整呈现，Skild 请求超时、CMU 请求遭遇证书吊销检查失败、上海 AI Lab 新闻入口 404，覆盖不完整。
+- **会议与生态：** 访问 [CoRL](https://www.corl.org/)、[RSS 论文页](https://roboticsconference.org/2026/program/papers/)、[ICRA](https://2026.ieee-icra.org/)；IROS 入口返回 401，会议逐篇新增情况未取得完整核验。检查 MuJoCo、Genesis、Isaac Lab、LeRobot 发布列表及 NVIDIA / LeRobot 的 Hugging Face 列表；未把 lastModified 当首次发布，LeRobot Cosmos3 条目创建在 10 月 29 日，11 月 2 日修改不足以证明新权重首次开放。
+- **工程与去重：** 检查 GitHub 机器人、世界模型、VLA、robot-learning 新建仓库样本，并读取入选仓库的 README、目录树和提交。PRISM-VLA 仅有标题式 README，不记作已完成实现发布。对本期 11 篇及两项工程事件检查 10 月 31 日、11 月 1 日日报，未命中既有条目。未按 Star 或讨论数量排序。
+- **精读：** WorldSketch、Reflex、Anchor 1 均完成全文抽取覆盖检查、关键正文与附录复核、300 dpi 裁图和整页视觉审查、Grounding Lint、Final Note Lint 全 8 项、质量与可读性审查以及正式保存、逐文件 SHA 校验。共 3 张方法总览图，0 占位；[逐篇索引与 SHA](paper-reading/news/2026-11-02/README.md)。其他论文为摘要层筛选，没有伪装成已完成全文精读。
+- **结论边界：** 本期是带有明确来源缺口的日报；两项工程事件时间已核验，论文来自补充窗口。后续公告可能补出主窗口论文，本次未将未检到或访问失败写成“当天没有资讯”。
 
 ---
 
@@ -213,6 +351,7 @@
 
 | 日期 | 日报 | 精读 |
 | --- | --- | --- |
+| 2026-11-02 | [日报](news/2026-11-02.md) | [3 篇](paper-reading/news/2026-11-02/README.md) |
 | 2026-11-01 | [日报](news/2026-11-01.md) | [4 篇](paper-reading/news/2026-11-01/README.md) |
 | 2026-10-31 | [日报](news/2026-10-31.md) | [5 篇](paper-reading/news/2026-10-31/README.md) |
 | 2026-10-30 | [日报](news/2026-10-30.md) | [5 篇](paper-reading/news/2026-10-30/README.md) |
