@@ -2,188 +2,163 @@
 
 > 具身智能与世界模型每日研究动态与论文精读。
 
-**最新一期：2026-11-11** ｜ [日报原文](news/2026-11-11.md) · [精读索引](paper-reading/news/2026-11-11/README.md) · [历史归档](#历史归档)
+**最新一期：2026-11-12** ｜ [日报原文](news/2026-11-12.md) · [精读索引](paper-reading/news/2026-11-12/README.md) · [历史归档](#历史归档)
 
 ---
 
-<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-11.md 自动镜像，请勿手工编辑 -->
+<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-12.md 自动镜像，请勿手工编辑 -->
 
-## 2026-11-11 Embodied AI & World Models Daily
+## 2026-11-12 Embodied AI & World Models Daily
 
-> 面向具身智能与 Robotics 研究员、工程师。主窗口为北京时间 11 月 11 日 00:00–23:59，补充窗口为 11 月 9–10 日。完成 5 篇全文精读，所有时间均已换算为北京时间。arXiv 以实际提交时间归期；来源覆盖仍有缺口，详见文末。
+> 面向具身智能与 Robotics 研究员、工程师。主窗口为北京时间 11 月 12 日，补充窗口为 11 月 10–11 日。本期完成 4 篇全文精读，重点补记此前未展开的补充窗口工作。**来源检查不完整：arXiv 可见公告仍截至 11 月 11 日，不能据此判断 12 日没有新论文。**
 
 ### 🔥 今日必读
 
-#### 1. 【VLA 记忆】机器人可能把等待误记成任务进展
+#### 1. 【世界动作模型·补记】LaST0.5 用交互潜表示连接视频与动作
 
-**来源：** [arXiv:2611.14488v1](https://arxiv.org/abs/2611.14488)  
+**来源：** [arXiv:2611.14048v1](https://arxiv.org/abs/2611.14048)（cs.RO；北京大学、香港中文大学等）  
 **类型：** Paper · research_paper  
-**发布时间：** 2026-11-11 02:47:57（首次提交）  
+**实际提交时间：** 2026-11-10 21:15:11，北京时间；补充窗口  
 **评分：** 89.5/100  
-**关键词：** Memory VLA · Robustness · Event Memory
+**关键词：** WAM · Interaction Latent · Adaptive Execution
 
-**一句话：** 在 RoboMME 计数任务中插入不改变任务状态的暂停或腕部小动作，可以暴露按时间采样的记忆把经过时间当作完成进度的捷径。
+**核心贡献：** 在世界专家与动作专家之间加入交互潜专家，通过带末端轨迹和物体框的未来画面监督，学习紧凑的操作表示，再用预测进度调整动作执行长度。
 
-![暂停与记忆控制揭示虚假任务进度](paper-reading/news/2026-11-11/temporal-shortcuts/images/page_001_fig_figure_1_review.png)
+![LaST0.5 的三专家与按进度执行流程](paper-reading/news/2026-11-12/last05/images/page_004_fig_figure_2_review.png)
 
-**技术要点：**
+- 十二帧未来默认分三段，潜查询并行生成；分段因果掩码维持视频、潜表示与动作的对应关系。训练时离线构造视觉交互提示，部署时无需真实未来画面。
+- 进度头用示范归一化时间监督，预测进度下降便截断动作，必要时重采样未来。它是进度代理，尚不能解释为安全或物理正确性证书。
+- LIBERO 报告训练期间最佳成功率 99.5%；十项 RLBench 为三轮平均 88.0 ± 3.0%，不使用自适应执行为 85.0 ± 2.0%。两套评价口径不同。
+- 四项双臂实机各二十次，完整任务平均 63.8%，π0.5 为 52.5%。附录保留拉链卡住、胶带打滑、螺丝错位等失败。
 
-- PickXtimes 的成功次数从 47/50 降至 16/50；同样暂停、但不把暂停帧写入记忆时为 45/50。这个控制实验将失效定位到记忆输入。
-- 仅缩放同一组图像的时间戳，也会造成提前停止或额外重复。移除显式时间编码仍不能消除时间采样占用记忆槽的影响。
-- 在测试设置中，改用事件索引、折叠重复返回状态，无需重训便能恢复至少一半损失。暂停增强训练没有解决问题，还损害计数能力。
+**为什么值得关注：** 把监督放在机器人与目标的局部关系上，比直接复用全局视频特征更有针对性。需要同时验证交互标注成本、暂停时的进度估计和部署延迟。
 
-**为什么值得关注：** 这是适合加入 VLA 回归测试的任务状态不变扰动。证据主要来自仿真计数任务；事件识别的可靠性与复杂真实操作中的收益仍需验证。
+**资源：** [论文](https://arxiv.org/abs/2611.14048) · [全文精读](paper-reading/news/2026-11-12/last05/last05.md)。本期未确认可独立核验的作者代码或权重下载。
 
-**资源：** [论文](https://arxiv.org/abs/2611.14488) · [全文精读](paper-reading/news/2026-11-11/temporal-shortcuts/temporal-shortcuts.md)。本期未确认可独立核验的作者代码或权重下载。
+#### 2. 【VLA 评测·补记】近邻动作检索可以恢复多少基准成绩？
 
-#### 2. 【世界动作模型】Elastic-WAM 按状态分配想象计算
-
-**来源：** [arXiv:2611.14257v1](https://arxiv.org/abs/2611.14257)  
+**来源：** [arXiv:2611.13160v1](https://arxiv.org/abs/2611.13160)（cs.RO）  
 **类型：** Paper · research_paper  
-**发布时间：** 2026-11-11 00:04:16（首次提交）  
+**实际提交时间：** 2026-11-10 03:44:58，北京时间；补充窗口  
 **评分：** 88.5/100  
-**关键词：** WAM · Adaptive Inference · Robot Control
+**关键词：** kNN · LIBERO · Generalization
 
-**一句话：** 学习时间更新密度、空间 token 重要性和总计算需求，让世界动作模型在不同状态下选择未来视频的更新位置与迭代步数。
+**核心贡献：** 将示范编码后直接检索并组合后续动作块，以免额外策略训练的基线，分析公开 VLA 的表示与动作输出。
 
-![Elastic-WAM 的时空更新预算与推理流程](paper-reading/news/2026-11-11/elastic-wam/images/page_003_fig_figure_2_review.png)
+![检索控制与完整 VLA 在同一执行协议中比较](paper-reading/news/2026-11-12/vla-knn/images/page_002_fig_figure_1_review.png)
 
-**技术要点：**
+- 1,693 条示范形成约 137,000 条记忆；每条源轨迹最多提供一个近邻。多模态距离结合图像、状态、语言、时间与历史。
+- 多模态近邻在 LIBERO 为 91.7%，固定 420 个 LIBERO-Plus 变体上为 82.4%；π0.5 分别为 97.7%、85.5%。近邻的下降幅度最小，绝对成绩仍有差距。
+- 局部动作一致性 LAC 比较近邻与同任务普通匹配的动作误差，可诊断检索键，但不能可靠排序相近质量的表示。额外训练的 LAC 键达到 93.0%、81.7%，需与免训练版本区分。
+- 微调后八个骨干中七个在 Plus 上改善检索，π0 是明显反例。动作相似性未证明 VLA 内部只做查表。
 
-- 三阶段训练计算控制器，时间密度由 Beta 基函数组合表示。冻结的 WAM 先做一次稠密联合更新，再对选中的未来 token 稀疏计算查询，仍保留完整逻辑键值与未更新位置的缓存状态。
-- H800 上的 RoboCasa-GR1 测试相对 Joint-WAM 减少 32.2% 延迟。LIBERO-Plus 中，完整自适应方案为 73.71%，仅学习空间选择为 71.71%；扩大更新集合并不保证更高成功率。
-- 双 xArm7 泡茶任务的标称条件完整成功率为 50%，Joint-WAM 为 30%；物体分布外条件两者均为 30%。实机证据集中于一项四阶段任务。
+**为什么值得关注：** 密集示范与保留原解法的扰动可能使基准偏向检索。评测应加入近邻、数据覆盖和需要新轨迹的测试；不能将本结果外推为所有机器人问题都能用检索解决。
 
-**为什么值得关注：** 为部署 WAM 提供可学习的计算分配方案。延迟收益依赖稀疏查询实现与硬件，实机泛化还需要更多任务和样本。
+**资源：** [论文](https://arxiv.org/abs/2611.13160) · [作者代码](https://github.com/sereact/lerobot_knn) · [全文精读](paper-reading/news/2026-11-12/vla-knn/vla-knn.md)。仓库元数据声明 Apache-2.0，本期未运行复现。
 
-**资源：** [论文](https://arxiv.org/abs/2611.14257) · [全文精读](paper-reading/news/2026-11-11/elastic-wam/elastic-wam.md)。本期未确认可独立核验的作者代码或权重下载。
+#### 3. 【仿真基础设施·补记】MuJoCo 4.0.1 修复稀疏求解器回归
 
-#### 3. 【多模态接口】MetaWAM 将机器人信号编码成固定大小的 meta-frame
+**来源：** [官方版本说明](https://github.com/google-deepmind/mujoco/releases/tag/4.0.1)  
+**类型：** Engineering · engineering_tech  
+**实际发布时间：** 2026-11-11 23:47:30，北京时间；补充窗口  
+**评分：** 79.5/100  
+**关键词：** Sparse Cholesky · Newton Solver · Windows
 
-**来源：** [arXiv:2611.14365v1](https://arxiv.org/abs/2611.14365)  
-**类型：** Paper · research_paper  
-**发布时间：** 2026-11-11 01:21:37（首次提交）  
-**评分：** 87.5/100  
-**关键词：** World Action Model · Latent Interface · DCT
+**核心贡献：** 修复 4.0.0 引入的稀疏 Cholesky 超节点合并错误。错误的 Hessian 分解可能导致收敛变慢、加速度错误或发散。
 
-**一句话：** 把动作、状态和价值等归一化信号放入分离的频率槽，经二维逆 DCT 形成图像潜变量接口，供视频扩散骨干统一读取与预测。
-
-![MetaWAM 的频率槽与统一输入输出接口](paper-reading/news/2026-11-11/meta-frames/images/page_005_fig_figure_3_review.png)
-
-**技术要点：**
-
-- 输入、输出 meta-frame 加六帧视频构成八帧序列，替代逐模态分配的十一帧。输出经二维 DCT 读取指定槽位；任务由输入输出槽配置决定。
-- RoboCasa 成功率为 68.9%，逐模态空间编码对照为 67.1%；推理时间从 0.479 秒降至 0.291 秒。其他八帧空间打包对照也达到 0.291 秒，因此速度提升应主要归因于序列缩短，编码的贡献需结合任务成功率判断。
-- Franka 三项任务各 20 次试验，平均分布内成功率为 85.0%，分布外为 68.3%。冻结视频骨干的信号重建探针与下游控制训练属于不同证据。
-
-**为什么值得关注：** 统一接口有利于复用视频模型与组合任务，但槽位数量、信号归一化和新模态的动态范围仍是接口设计的一部分。
-
-**资源：** [论文](https://arxiv.org/abs/2611.14365) · [官方代码](https://github.com/showlab/MetaWAM) · [全文精读](paper-reading/news/2026-11-11/meta-frames/meta-frames.md)。本期未完整验证全部权重下载。
-
-#### 4. 【开源模型】Praxis-1 发布机器人权重与训练代码
-
-**来源：** [Runway 官方发布](https://runway.com/news/company-news/praxis-1-is-now-available)  
-**类型：** Open Source · open_source  
-**发布时间：** 2026-11-11 23:00（官方页面时间戳 15:00 UTC）  
-**评分：** 82/100  
-**关键词：** Video Pretraining · VLA · Open Weights
-
-**一句话：** 九月已介绍的 Praxis-1 本次新增公开权重、推理和微调代码，作为开源发布事件收录，与原模型介绍归并。
-
-**技术要点：**
-
-- 技术页描述约 26.9B 的 MoE 视频骨干，每 token 激活约 2.8B 参数，动作分支约 314M。视频分块因果计算，动作通过单向注意力读取视频特征。
-- 每次生成 24 行、15Hz 的动作块，对应约 1.6 秒。仓库提供 DROID 单臂、YAM 双臂配置和 NVFP4 变体，SO-101 仍列为后续支持。
-- 官方报告 RoboLab-120 上 1,200 回合的 46.2% 成功率。本期未独立复核该排行榜、运行检查点或验证真实机器人迁移。
-
-**为什么值得关注：** 工程师可以检查数据接口、显存需求及后训练流程。已核对仓库 README 和 Apache-2.0 许可证；具体权重与其依赖仍应逐项读取许可。
-
-**资源：** [技术说明](https://runway.com/research/praxis-1-video-pretraining-to-robot-control) · [官方代码](https://github.com/runwayml/praxis-1-oss) · [权重集合](https://huggingface.co/collections/runwayml/praxis-1)。本条为开源事件，未虚列论文精读。
+同版还修复圆柱边缘多接触问题，并让无法加载的插件以警告跳过。Windows 的 MuJoCo Studio Web Viewer 通过独立、自动安装的客户端 wheel 获得支持。对使用稀疏约束求解或 Windows 可视化的工程师值得检查；这些结论来自官方变更记录，本期未运行回归或性能实验。
 
 ### 📄 论文雷达
 
-#### 【动作表征】OnlyAct
+#### 【灵巧数据·补记】DexSeed
 
-**来源与时间：** [arXiv:2611.14420v1](https://arxiv.org/abs/2611.14420)，11 月 11 日 01:59:19。  
-**关键词：** Latent Action · World Model · Representation  
-**评分：** 85/100。  
-**核心贡献：** 在 V-JEPA2 上用运动区域换背景构造正样本、同视频不重叠片段构造困难负样本，学习较少携带场景信息的动作表征，再冻结编码器驱动生成模型。
+**来源与时间：** [arXiv:2611.14092v1](https://arxiv.org/abs/2611.14092)，11 月 10 日 21:52:18。  
+**关键词：** Human Interaction · Data Generation · Dexterous VLA  
+**评分：** 86.5/100。  
+**核心贡献：** 从十九段人手物体交互、八类抓法出发，保留局部手物几何，扩展物体和手臂轨迹，在手臂跟踪动态下训练手指残差，再把成功物理轨迹渲染成视觉动作示范。
 
-![OnlyAct 的动作相关正负样本构造](paper-reading/news/2026-11-11/onlyact/images/page_004_fig_figure_2_review.png)
+![DexSeed 的五阶段数据生成管线](paper-reading/news/2026-11-12/dexseed/images/page_003_fig_fig_2_review.png)
 
-13 项线性动作探针中 11 项领先，平均 R² 为 0.490，冻结骨干为 0.347、最佳潜动作对照为 0.211。生成端使用固定训练协方差白化，并在附录比较白化控制。场景泄漏探针的解码 LPIPS 只能解释为该协议下更难重建背景；论文没有证明真实机器人控制成功率提高。[项目页](https://runjiali-rl.github.io/onlyact/) · [全文精读](paper-reading/news/2026-11-11/onlyact/onlyact.md)。代码和模型仍为计划开放。
+生成 25,270 条示范。FR3 物理实现成功率为 95.50%，这个数字不等于后续策略真机成绩。真机八模式各十次，成功率为 20%–80%，平均 55%；穿把手抓法最困难。当前以单臂抓放为主，手内操作和双臂协调仍待验证。[项目页](https://robbyant-research.github.io/DexSeed/) · [作者代码入口](https://github.com/robbyant-research/DexSeed) · [全文精读](paper-reading/news/2026-11-12/dexseed/dexseed.md)。代码链接已从项目页确认，本期未验证全部下载和运行。
 
-#### 【长程操作】One Policy for 100 Household Tasks
+#### 【世界模型适配·补记】Few-Shot Residual Adaptation
 
-**来源与时间：** [arXiv:2611.14432v1](https://arxiv.org/abs/2611.14432)，11 月 11 日 02:06:16。  
-**关键词：** BEHAVIOR · π0.5 · Long Horizon  
-**评分：** 80.5/100。  
-**核心贡献：** 一套 π0.5 检查点覆盖 100 项家庭任务，结合语义阶段、三相机输入、动作流多样本选择和前缀复用，并比较另一条实践记忆路线。
+**来源与时间：** [arXiv:2611.13592v1](https://arxiv.org/abs/2611.13592)，11 月 10 日 13:04:41。  
+**关键词：** Latent Dynamics · Residual Adapter · Deployment Shift  
+**评分：** 84.5/100。  
+**核心贡献：** 冻结双视角世界模型和 CEM 控制器，在预测器内部与输出处分别增加残差，用三回合交互的真实下一观察进行顺序自监督训练。
 
-![BEHAVIOR 方案的统一策略和动作生成流程](paper-reading/news/2026-11-11/behavior100/images/page_003_fig_figure_1_review.png)
+![双位置残差和规划反馈](paper-reading/news/2026-11-12/residual-adapt/images/page_003_fig_figure_1_review.png)
 
-统一策略 100 任务的部分目标完成指标 Q 为 0.392；共同 50 任务上，前一年度方案的 0.260 提高到 0.371。Astra 的 14 任务子集 Q=0.639 与最终部分接入后的公开提交 Q=0.446 属于不同设置；后者完整成功率为 27.3%。全部为 OmniGibson 仿真，系统中的多项改动没有逐一隔离消融。[全文精读](paper-reading/news/2026-11-11/behavior100/behavior100.md)。本期未确认作者代码或权重下载。
+每种真机设置三十次：重心偏移从 0% 恢复到 90%，摩擦变化从 3.3% 到 100%；全量微调在摩擦条件也达到 100%。RTX 4060 Ti 每控制步约二十八秒，跨仿真与实机适配迁移很差。它证明特定推箱部署条件的恢复，尚未证明实时或通用物理适配。[全文精读](paper-reading/news/2026-11-12/residual-adapt/residual-adapt.md)。本期未确认作者代码或权重下载。
 
-#### 【可变形操作】Learning Physical Context for Deformable Linear Object Manipulation
+其他补充窗口候选，本期仅核验摘要与时间：
 
-**来源与时间：** [arXiv:2611.14274v1](https://arxiv.org/abs/2611.14274)，11 月 11 日 00:17:48。  
-**关键词：** DLO · Dynamics · Physical Context  
-**评分：** 78.5/100。  
-**核心贡献：** 摘要报告几何特征和历史信息使 470 对仿真比较中的执行误差降低 9.9%；额外物理参数估计虽有利于预测，尚未表现出可检测的控制收益。另有零样本硬件迁移实验。本期仅核验摘要与时间，未完成全文精读，未将预测指标等同于控制改善。
-
-其他通过相关性预筛的方向包括 [SIGMO 交互规划](https://arxiv.org/abs/2611.14414)、[AUV 的 GP-MPCC](https://arxiv.org/abs/2611.14373) 与 [TanCRAFT 装配反馈](https://arxiv.org/abs/2611.14470)。[ForeseeDrive](https://arxiv.org/abs/2611.14286) 偏自动驾驶，[UGG](https://arxiv.org/abs/2611.14440) 偏四维生成补全，暂不扩展为重点条目。[形式化 POSG 生成](https://arxiv.org/abs/2611.14419) 缺少足够直接的机器人方法证据，未通过本期相关性预筛。
+| 方向 | 核心线索与边界 |
+| --- | --- |
+| 跨本体动作接口 | [CIALLO](https://arxiv.org/abs/2611.13732)，11 月 10 日 16:35:27。对齐动作、视觉变化与语言意图，校准本体嵌入；实机与仿真解码器更新协议不同。 |
+| 长动作块在线适配 | [ExRL](https://arxiv.org/abs/2611.13482)，11 月 10 日 10:44:05。冻结基础策略，用离策略 RL 学习每块执行长度。 |
+| 机器人安全评测 | [LEASH](https://arxiv.org/abs/2611.14115)，11 月 10 日 22:06:20。闭环评估任务、计划、执行、注入及记忆风险，再用任务、动作和提交门控制。 |
+| BEHAVIOR 方案 | [WAM is capable in BEHAVIOR-1K](https://arxiv.org/abs/2611.13818)，11 月 10 日 17:46:02。进度路由与分组适配器的系统方案，成绩不能与不同测试设置直接混排。 |
+| 人类无动作视频 | [Ego Guidance](https://arxiv.org/abs/2611.13685)，11 月 10 日 15:33:35。联合动作与未来视觉表示预测，研究无动作标签数据的作用。 |
+| GPU 控制计算 | [FAME-QP](https://arxiv.org/abs/2611.13766)，11 月 10 日 17:06:55。稠密 MPC 二次规划使用算子缓存、融合内核及 CUDA Graph，需结合具体问题规模评估。 |
+| 导航表征 | [DeRep](https://arxiv.org/abs/2611.13499)，11 月 10 日 11:11:47。以可达性和深度重建联合监督，再冻结编码器比较多种策略学习。 |
+| 动力学与规划 | [K-MBRL](https://arxiv.org/abs/2611.14186)、[Learn-To-Propagate](https://arxiv.org/abs/2611.13863) 和 [Latent Barrier Steering](https://arxiv.org/abs/2611.13227) 分别研究线性动力学表示、分布鲁棒集合传播与潜空间行为选择。均为 11 月 10 日提交。 |
 
 ### 🛠 工程与开源
 
-#### NTT：用物理控制适配器约束视频预测
+**Gemini Robotics 2.5，补记。** [DeepMind 官方发布](https://deepmind.google/blog/gemini-robotics-2-5-accelerates-real-world-physical-intelligence/) 的结构化时间为 11 月 10 日 15:00 UTC，即北京时间 23:00。官方报告超过二百项任务的评估、Apollo 2 汽车零件分拣试点，以及推理时安全引导；试点成功率为 96%。页面未给出足以独立复核的完整协议，不能将其当成无人干预通用部署证明。模型面向合作伙伴开放；ASIMOV-Jailbreak 基准入口与模型权重公开是两回事。engineering_tech 双评分平均 79/100。
 
-[官方技术发布](https://group.ntt/en/newsrelease/2026/11/11/261111b.html) 的时间戳对应 11 月 11 日 14:00:30，engineering_tech 双评分平均 78.5/100。方法把物体位置、速度、质量估计与物理 rollout 接入视频模型，用于比较 VLA 或规划器给出的候选动作。在小型机器人装载实验中，公司报告成功率由 73.1% 提高到 92.3%；已取得的正文未提供明确试验次数。本期未发现可确认的公开实现，机场应用仍是计划验证。
+**Steel 待核实日期。** [Skild 官方技术页](https://www.skild.ai/blogs/steel) 介绍 Newton 中的异构 GPU 刚体求解器，采用按关节数分组、按环境接触工作量路由的方案。页面给出仿真吞吐比较，并明确区别各自最优批次与同批次结果、仿真步进与端到端训练速度。正文及元数据只标“Nov 2026”，发布时间未能可靠确认，暂不计作 12 日发布。
 
-Praxis-1 的代码与权重已合并在必读条目，避免重复计数。另检查了 MuJoCo、Genesis、Isaac Lab、LeRobot 的发布入口及模型目录；版本活动本身不作为新方法证据。GENTO 21 自由度手的新闻稿对应本窗口，但主要提供硬件规格，缺少可核验的学习或控制方法实验，本期不列重点。[官方新闻稿](https://www.prnewswire.com/news-releases/tianji-intelligence-debuts-21-dof-dexterous-hand-at-corl-2026-as-nvidia-demos-gr00t-2-on-custom-marvin-pro-302934702.html)。
+MuJoCo、Genesis、Isaac Lab、LeRobot 的近期版本页和 Hugging Face 模型目录已检查。Praxis-1 权重、推理和微调代码已在上期合并记录，本期二次报道不重复算作新发布。
 
 ### 💬 社区信号
 
-已通过 GitHub 机器人、VLA、世界模型关键词，Hugging Face 模型目录和 Hacker News 检索发现线索，再回溯一手页面。本期未核实值得单列的独立复现或争议结论，不将发布方成绩当作社区共识。[CoRL 官方入口](https://2026.corl.org/) 用于核对会场线索，同一论文和仓库归并一个事件。
+[CoRL 世界模型 workshop](https://do-robots-need-world-models.github.io/) 将少样本残差适配列为 spotlight，可作为议题线索；会议日程不等于论文首次公开时间。本期检查了 GitHub、Hugging Face 和 Hacker News 入口，未核实可单列的独立复现结论。检索基线与世界模型适配的成绩均属于作者实验，本期未亲自复现。
 
-### 🔎 补充窗口筛选记录
+### 🔎 补充窗口与去重记录
 
-| 线索 | 实际日期（北京时间） | 处理 |
+| 线索 | 北京时间 | 处理 |
 | --- | --- | --- |
-| LingBot-Touch | 11 月 10 日 02:12:00 | 已于上期收录与精读；[论文](https://arxiv.org/abs/2611.12806) |
-| RoboScript | 11 月 10 日 02:59:45 | 已于上期收录与精读；[论文](https://arxiv.org/abs/2611.12885) |
-| SWAM | 11 月 10 日 02:55:04 | 已于上期收录与精读；[论文](https://arxiv.org/abs/2611.12870) |
-| DASH | 11 月 9 日 12:23:14 | 已在对应日期精读，排除重复；[论文](https://arxiv.org/abs/2611.11854) |
-| GR00T 2 | 11 月 9 日 22:00:01 | 发布与会场报道归并；[对应日报](news/2026-11-09.md) |
-| PAN2 | 官方美国日期 11 月 10 日；另一机构页面标 11 月 11 日 | 未取得可靠时区及小时，无法确定北京时间归期；保留待核实，不计作本日已确认发布 |
+| 本期四篇精读 | 11 月 10 日，具体时刻见各条 | 首次在本仓库展开精读，明确补记，不改写前期产物。 |
+| Temporal Shortcuts、Elastic-WAM、MetaWAM | 11 月 11 日凌晨 | 上期已精读，归并原事件；[上一期](news/2026-11-11.md)。 |
+| OnlyAct、BEHAVIOR100 | 11 月 11 日凌晨 | 上期雷达精读已完成，不重复生成笔记。 |
+| Praxis-1 | 11 月 11 日 23:00 | 上期已收录开源发布；12 日媒体报道不构成新事件。 |
+| LingBot-Touch、RoboScript、SWAM | 11 月 10 日凌晨 | 对应日报已精读，排除重复；[11 月 10 日日报](news/2026-11-10.md)。 |
+| PAN2 | 官方美国日期 11 月 10 日，精确北京时间未确认 | IFM 正文直接访问仍受阻，不能据二次报道确定新发布归期；[官方入口](https://ifm.ai/pan2/press-release/)。 |
+| Steel | 仅能确认 2026 年 11 月 | 未取得可靠日级发布时间，保留技术线索，不归入主窗口。 |
 
 ### 📊 今日技术趋势
 
-计算预算、信号接口和记忆索引开始成为世界动作模型的重要设计变量。Elastic-WAM 与 MetaWAM 分别优化推理更新和输入表示；记忆捷径实验则提醒，更多历史帧可能引入新的时间偏差。评估时应同时比较计算量、任务状态和真实控制收益，保留零收益或失败条件。
+本期补记围绕表示和闭环证据展开：LaST0.5 用局部交互监督引导动作，近邻基线检验示范覆盖对成功率的贡献；DexSeed 强调物理实现后再训练，残差适配则显示预测误差下降未必带来控制成功。四者的共同启示是将数据支持集、执行误差与真实任务成功分开测量。
 
 ### 来源覆盖与双评分
 
-- 已直接抓取官方 [cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent) 的近期和 11 月列表，对预筛后的 741 个去重候选逐条核对摘要页和版本时间。按 v1 划分：主窗口 12 条、补充窗口 168 条、窗口外 561 条。AI/LG 月列表只读取前 2,000 条，结合 recent 检查当前窗口，没有声称穷尽整个月份。
-- **来源检查不完整：** 官方可见公告截至 11 月 11 日，已索引的本日新稿集中于凌晨。北京时间白天、晚间提交可能尚未进入公开公告，后续需补查。已核验的版本中未发现落在主窗口的 v2+ 更新。
-- 检查范围还包括 GEAR、DeepMind、PI、Skild、1X、Figure、TRI、RAI、Stanford、Berkeley、CMU、MIT、上海 AI 实验室、机器人公司与会议入口。PI 的批量访问限流及 CMU 的 TLS 失败通过网页工具补查；机构首页可读取不代表所有子项目已穷尽。
-- **PAN2 留有核验缺口：** [IFM 官方发布](https://ifm.ai/pan2/press-release/) 的日期与另一机构页面日期不能可靠换算成同一北京时间；直接正文访问受阻。[官方仓库](https://github.com/ifm-ai/PAN2) 的创建时间也不能充当模型发布时间。未把这条线索写成已核实当日发布。该缺口与 arXiv 公告延迟均不能解释成当天没有资讯。
-- 三篇必读论文与雷达最高两篇均完成全文、图像视觉审查、grounding、笔记 lint、质量和可读性审查及正式保存。共 5 张正式图片、0 张占位图。[精读索引](paper-reading/news/2026-11-11/README.md)。
-- 评分向量依次为 significance / novelty / evidence / relevance / community，每项 0–10。research_paper 权重 4/3/2/1/0，open_source 为 2/2/2/3/1，engineering_tech 为 3/1/2/3/1。社区评分保持保守，不以机构名气代替独立关注证据。
+- 官方 [cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent) 的 recent 与 11 月列表均已直接抓取；另检查四类 new 页，均显示 11 月 11 日公告。AI/LG 月列表读取前 2,000 项，结合 recent 覆盖近期检索，未声称穷尽整个月份。
+- 预筛后 741 个去重候选摘要页与版本时间获取成功。按 v1 北京时间归期：可见池中主窗口 0、补充窗口 87、窗口外 654；未见已核验候选有 12 日 v2+ 更新。**这些是当前可见池的统计，不能推出 12 日没有投稿或资讯。主窗口来源检查仍不完整，后续公告需要补查。**
+- 已扫描 GEAR、DeepMind、PI、Skild、1X、Figure、RAI、TRI、Stanford、Berkeley、CMU、MIT、上海 AI 实验室、机器人公司及会议入口。PI 限流和 CMU 批量 TLS 失败通过网页工具补查；PAN2 直接正文仍为 403。机构首页能访问也不代表所有子项目已经穷尽。
+- 四篇笔记均已完成全文、代表图视觉审查、grounding、全部笔记 lint、质量与可读性审查及正式保存；共 4 张正式图片、0 张占位图。[精读索引](paper-reading/news/2026-11-12/README.md)。
+- 下表两轮向量依次为技术份量、增量、证据、相关性、社区关注度，各 0–10。研究论文权重 4/3/2/1/0；工程技术权重 3/1/2/3/1。篇幅、分数与是否纳入精读按本期可核实证据决定，不把机构知名度当作热度。
 
 | 候选 | 类型 | 第一轮 | 第二轮 | 平均分 |
 | --- | --- | --- | --- | ---: |
-| Temporal Shortcuts | research_paper | 9/9/9/10/1 | 9/8/9/10/1 | 89.5 |
-| Elastic-WAM | research_paper | 9/8/9/10/1 | 9/9/8/10/1 | 88.5 |
-| MetaWAM | research_paper | 9/8/9/10/1 | 8/9/9/10/1 | 87.5 |
-| OnlyAct | research_paper | 8/9/8/9/1 | 8/9/9/9/1 | 85 |
-| BEHAVIOR100 | research_paper | 8/7/9/9/1 | 8/8/8/9/1 | 80.5 |
-| DLO 物理上下文 | research_paper | 8/8/7/9/1 | 8/7/8/9/1 | 78.5 |
-| SIGMO | research_paper | 8/7/8/9/1 | 8/7/7/9/1 | 77 |
-| AUV GP-MPCC | research_paper | 7/7/8/9/1 | 7/8/7/9/1 | 74.5 |
-| TanCRAFT | research_paper | 7/7/7/8/1 | 7/8/7/8/1 | 72.5 |
-| ForeseeDrive | research_paper | 8/7/7/6/1 | 8/7/8/6/1 | 74 |
-| UGG | research_paper | 8/8/7/7/1 | 8/8/7/8/1 | 77.5 |
-| Praxis-1 权重发布 | open_source | 9/8/8/10/1 | 9/9/8/10/1 | 82 |
-| NTT 物理控制适配器 | engineering_tech | 8/8/7/10/3 | 8/7/7/10/3 | 78.5 |
+| LaST0.5 | research_paper | 9/9/9/10/1 | 9/8/9/10/1 | 89.5 |
+| VLA kNN | research_paper | 9/8/9/10/1 | 9/9/8/10/1 | 88.5 |
+| DexSeed | research_paper | 9/8/8/10/1 | 8/9/9/10/1 | 86.5 |
+| 双位置残差适配 | research_paper | 8/9/9/9/1 | 8/8/9/9/1 | 84.5 |
+| LEASH | research_paper | 8/8/8/10/1 | 8/9/8/10/1 | 83.5 |
+| CIALLO | research_paper | 8/8/8/10/1 | 8/8/7/10/1 | 81 |
+| ExRL | research_paper | 8/8/8/9/1 | 8/7/8/9/1 | 79.5 |
+| WAM BEHAVIOR | research_paper | 8/7/8/10/1 | 8/8/8/10/1 | 80.5 |
+| Ego Guidance | research_paper | 8/7/7/10/1 | 8/8/7/10/1 | 78.5 |
+| FAME-QP | research_paper | 8/7/7/9/1 | 8/7/8/9/1 | 77 |
+| DeRep | research_paper | 7/8/8/9/1 | 7/8/7/9/1 | 76 |
+| K-MBRL | research_paper | 8/7/7/9/1 | 8/7/8/9/1 | 77 |
+| Learn-To-Propagate | research_paper | 8/8/7/9/1 | 8/7/7/9/1 | 77.5 |
+| Latent Barrier Steering | research_paper | 8/8/7/9/1 | 8/8/8/9/1 | 80 |
+| MuJoCo 4.0.1 | engineering_tech | 8/6/9/10/1 | 8/7/9/10/1 | 79.5 |
+| Gemini Robotics 2.5 | engineering_tech | 8/8/7/10/2 | 8/8/8/10/2 | 79 |
 
 ---
 
@@ -191,6 +166,7 @@ Praxis-1 的代码与权重已合并在必读条目，避免重复计数。另�
 
 | 日期 | 日报 | 精读 |
 | --- | --- | --- |
+| 2026-11-12 | [日报](news/2026-11-12.md) | [4 篇](paper-reading/news/2026-11-12/README.md) |
 | 2026-11-11 | [日报](news/2026-11-11.md) | [5 篇](paper-reading/news/2026-11-11/README.md) |
 | 2026-11-10 | [日报](news/2026-11-10.md) | [5 篇](paper-reading/news/2026-11-10/README.md) |
 | 2026-11-09 | [日报](news/2026-11-09.md) | [6 篇](paper-reading/news/2026-11-09/README.md) |
