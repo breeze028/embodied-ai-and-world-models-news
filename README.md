@@ -2,120 +2,65 @@
 
 > 具身智能与世界模型每日研究动态与论文精读。
 
-**最新一期：2026-11-14** ｜ [日报原文](news/2026-11-14.md) · [精读索引](paper-reading/news/2026-11-14/README.md) · [历史归档](#历史归档)
+**最新一期：2026-11-15** ｜ [日报原文](news/2026-11-15.md) · [历史归档](#历史归档)
 
 ---
 
-<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-14.md 自动镜像，请勿手工编辑 -->
+<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-15.md 自动镜像，请勿手工编辑 -->
 
-## 2026-11-14 Embodied AI & World Models Daily
+## 2026-11-15 Embodied AI & World Models Daily
 
-> 主窗口：北京时间 11 月 14 日；补充窗口：11 月 12–13 日。本期核验 PEAR 新代码事件，并完成 EgoX、Reins 两篇补充窗口论文的全文精读。**来源检查不完整：arXiv 最新公告仍为 13 日，不能据此断言 14 日没有投稿；其他访问缺口见文末。**
+> 主窗口为北京时间 11 月 15 日，补充窗口 13–14 日。来源检查不完整，不能把以下已验证范围解释为全天没有其他资讯。
 
 ### 🔥 今日必读
 
-#### 1. 【开源项目】PEAR：将仿真机器人 RL 接入推理模型后训练
-
-**来源：** [MIT HAN Lab 官方代码](https://github.com/mit-han-lab/pear) · [官方技术说明](https://mit-han-lab.github.io/pear-blog/)  
-**类型：** Open Source · open_source  
-**时间依据：** 仓库创建于北京时间 2026-11-14 01:43:06；这是代码仓库创建时间，不用于断言论文也于当天首次公开。  
-**评分：** 83/100  
-**关键词：** Robot-Use RL · Reasoning Model · Simulation
-
-**核心贡献：** 开放面向 agentic robotics 的后训练基础设施，让推理模型从相机和状态直接输出末端目标，在仿真任务成功反馈下学习机器人使用。
-
-- 训练基于 veRL 的异步 RL、GRPO、动态采样及 Score Centering；Ray 集群同时承载 MuJoCo CPU 和 Isaac Sim GPU 环境。长上下文训练使用 FSDP、序列并行、梯度检查点和激活卸载，回合前缀 KV 缓存经 LMCache 向 CPU 卸载。
-- 官方项目说明报告：27B 基础模型在 LIBERO 从 1.6% 到 74.4%；同场景换指令为 57.4%，对照 π0.5 为 0.75%。这些是作者报告的不同协议成绩，本期未做独立复现。
-- “不需 harness”指没有额外感知工具、抓取规划器或技能库；实际执行仍由逆运动学和机器人控制器完成，不能写成直接生成电机信号。
-- 复现成本应分开看：模型服务文档列单 RTX 5090/GB300 部署路径，而完整 quick start 要求 32 个 GPU 节点（8 个训练、24 个 rollout；每节点 8 H100 或 4 GB300）。单卡推理不代表单卡可重现完整训练。
-
-**为什么值得关注：** 研究对象从模仿动作轨迹转向推理模型的多轮物理交互后训练。工程价值在训练、模拟器和部署接口整合；任务收益、服务成本及跨机器人泛化仍应按各自试验条件评估。
-
-**资源：** [代码与 Apache-2.0 许可](https://github.com/mit-han-lab/pear) · [训练说明](https://github.com/mit-han-lab/pear/blob/main/docs/getting_started/quickstart.md) · [官方模型入口](https://huggingface.co/collections/mit-han-lab/pear)。本条按开源事件收录，未列为已完成论文精读；未下载或执行训练与权重。
-
-#### 2. 【模仿学习与策略】EgoX：用模态接口连接本体，再预测身体的未来
-
-**来源：** [arXiv:2611.16728v1](https://arxiv.org/abs/2611.16728)（CMU、Bosch、UT Arlington、UC Berkeley、NVIDIA）  
-**类型：** Paper · research_paper  
-**实际提交时间：** 北京时间 2026-11-12 20:40:24，补充窗口；本期是全文展开，非 14 日新投稿。  
-**评分：** 85/100  
-**关键词：** Cross-Embodiment · Egocentric Data · Latent Prediction
-
-**核心贡献：** 为本体各模态保留独立观察编码和动作专家，以共享 Transformer 迁移经验，再用训练时的未来本体潜变量监督辅助操作学习。
-
-![EgoX 模态接口、共享主干与未来监督](paper-reading/news/2026-11-14/egox/images/page_005_fig_figure_3_review.png)
-
-- 腕、末端关键点和躯干采用明确的参考坐标系，不把不同机器人的关节硬拼成同一控制向量。新本体仍需人工模态对应、坐标转换和控制器集成。
-- EMA 教师提供未来视觉与本体潜变量目标。部署删除未来预测专家与教师，但保留从当前状态聚合本体词元的学生编码器。
-- 4,851 条轨迹、34.38 小时数据；五任务、六本体共 13 个组合，五种真机、一种仿真。跨本体预训练使平均**归一化任务进度**从 0.63 到 0.80，分布外从 0.53 到 0.77；附录对应成功率从 0.35 到 0.56，二者不能混用。
-- 目标任务示范排除于预训练，之后仍用于微调。分布外相对于该目标任务示范，相关条件可能出现于其他本体数据。七设置 dreaming 消融同时移除整组组件，不能唯一归因于预测损失。
-
-**为什么值得关注：** 共享操作经验需要同时处理语义接口、动力学和数据混合。模块化接口避免粗粒度策略在预训练后某些任务上退化，但论文未证明无需示范即可直接控制全新硬件。
-
-**资源：** [项目页](https://egox-dream.github.io/) · [作者代码入口](https://github.com/egox-dream/egox) · [全文精读](paper-reading/news/2026-11-14/egox/egox.md)。已核对项目页与仓库可达，未运行复现。
-
-#### 3. 【操作与抓取】Reins：让模型动作链随物理检查停止
-
-**来源：** [arXiv:2611.16632v1](https://arxiv.org/abs/2611.16632)（MIT CSAIL、Harvard）  
-**类型：** Paper · research_paper  
-**实际提交时间：** 北京时间 2026-11-12 19:05:11，补充窗口；本期是全文展开。  
-**评分：** 83.5/100  
-**关键词：** Guarded Actions · Asynchronous Perception · Long-Horizon
-
-**核心贡献：** 用可测量接触和夹持结果的原子动作组成条件链，失败即停；独立叙述模型持续观察，把决策等待期间发生的变化带回下一轮。
-
-![Reins 的条件动作链和视觉叙述](paper-reading/news/2026-11-14/reins/images/page_001_fig_figure_1_review.png)
-
-- 18 种工具覆盖三维感知、运动、夹爪及任务台账。单链最多八种调用、十六次运行，每步结果必须通过检查，不是开放式重放。
-- Sol 在五项双臂真机任务中完成 22/25 回合，即 88%。猜杯完整系统 5/5，去掉叙述者 2/5，去掉 harness 0/5；每条件只有五次，抽屉与扫物提示含抓取、姿态建议。
-- 模型等待占总时长 41%–78%。每秒采样并不等于每秒理解；叙述报告仍落后现场约一至两次调用延迟。模型间还使用不同速度档位，不宜将结果当成等时延纯能力排名。
-- 单帧重建的孪生里 14 个可动物体中 11 个通过门槛，五场景脚本可完成任务；这套工具**未用于真机评测**，脚本由 mocap 手执行，不能写成仿真规划已提高真实成功率。
-
-**为什么值得关注：** 比扩大动作步长更关键的是保留中间证据、失败停止条件与时间戳。研究仍受单平台、小样本、有限接触反馈和慢叙述限制。
-
-**资源：** [项目页](https://reins-robot.github.io/) · [全文精读](paper-reading/news/2026-11-14/reins/reins.md)。论文写明代码计划发表时发布，本期未确认公开实现，不把演示页当代码开源。
+本期未确认需在此展开的重大新论文；工程条目见下。已有论文按事件去重，未为凑数量重发。
 
 ### 📄 论文雷达
 
-本期不重复列入 13 日已详细介绍的 SALA、InneR、ACE-CaP-0、FORGE、HEIR、UAV-Flow++ 等事件。两篇本期重点补充论文已在上方展开。其余补充窗口候选仍有待深入比较，本期不声称全部覆盖，也不以未展开候选推导“没有值得看的论文”。
+直接检查四类 arXiv recent 和月列表并核验 902 个去重候选的摘要及版本时间：主窗口首次提交 0，补充窗口 54，窗口外 848。官方公告已到 16 日；公告日期与投稿日期不同，周末未公告投稿仍存在覆盖缺口。AI/LG 月列表仅前 2,000 项，其他补充窗口候选未逐篇完成全文比较，本期不声称穷尽。
 
 ### 🛠 工程与开源
 
-PEAR 的训练基础设施、部署和模型入口已聚簇为上方一个开源事件，不重复计数。[MuJoCo 官方版本](https://github.com/google-deepmind/mujoco/releases)、[Isaac Lab](https://github.com/isaac-sim/IsaacLab/releases)、[Genesis](https://github.com/Genesis-Embodied-AI/Genesis/releases)、[LeRobot](https://github.com/huggingface/lerobot/releases) 已查；这些已获取的最新 release 均早于本期主窗口，未包装为 14 日新发布。
+#### 【运动与全身控制】M1mic-MLX：把世界模型动作跟踪训练移到 Apple Silicon
 
-[SimReady 资产抓放教程](https://huggingface.co/blog/nvidia/simready-assets-robot-pick-and-place)标注 11 月 13 日、无可靠时区；作为补充工程参考。它区分资产 profile 检查与组合场景运行，例子使用固定位置、脚本路径、有限碰撞检查；不证明真机鲁棒性。其信息增量不足以进入本期必读。
+**来源：** [作者仓库与训练记录](https://github.com/VittorioPastore/m1mic-mlx)  
+**类型：** open_source  
+**时间：** 仓库创建于北京时间 2026-11-15 11:14:36；不是论文首发日期。  
+**评分：** 77.5/100  
+**关键词：** World-Model RL · MLX · Humanoid
+
+**核心贡献：** CPU 运行 MuJoCo 仿真，MLX 在 GPU 上训练世界模型、策略和 critic，通过想象轨迹反向传播优化 G1 全身动作跟踪。
+
+- 作者报告 M1 Pro 16GB、40 段 LAFAN1 动作，79 分钟训练得到归一化回报 0.824、零失败片段；后续检查点保持阈值。内存报告为 2.6GB。这是一台机器的一次训练，未经过本期独立复现，也不是真机成功率。
+- 工程改动包括 CPU 仿真线程池、适合 Metal 的小矩阵计算、缩小 batch、限制 MLX 缓存和以 numpy 保存回放。默认使用 1,024 个仿真世界，避免照搬数据中心规模导致共享内存换页。
+- README 提供非有限损失跳过、激活梯度修正和评测协议；数值对照是作者自检，不能替代独立验证。实现继承既有可微世界模型训练路线，不能把后端适配称为全新控制算法。
+
+**为什么值得关注：** 为缺少数据中心 GPU 的工程研究提供可检查的训练入口。复用前应核对硬件、数据、批量大小、速度与评测阈值，尤其不能将仿真跟踪成绩推导为部署可靠性。
+
+**资源：** [代码](https://github.com/VittorioPastore/m1mic-mlx) · [作者技术报告](https://www.vittoriopastore.com/m1mic-mlx-report.pdf)。本条仅完成工程说明与公开训练记录阅读，未完成技术报告全文精读，未运行代码。
 
 ### 💬 社区信号
 
-已查询 Hacker News robotics 的近期条目。主窗口所见公司组织调整、配送网络等讨论不作为科研成果收录；候选热度不能替代原文、代码和基准证据。PEAR 仓库星数也不用于证明模型能力。本期未核实到需单列的高价值独立复现或技术争议。
+已查询 GitHub 与 Hacker News。未以星数、公司组织或产品新闻替代科研证据；暂无已核实、值得单列的独立复现。
 
 ### 🔎 补充窗口筛选记录
 
-- [EgoX](https://arxiv.org/abs/2611.16728)于北京时间 12 日 20:40:24 提交，[Reins](https://arxiv.org/abs/2611.16632)于 12 日 19:05:11 提交：13 日已有简短筛选记录，本期首次在本任务中完成全文笔记，明确标为补记。
-- [SALA](https://arxiv.org/abs/2611.17110)于 13 日 01:04:50、[InneR](https://arxiv.org/abs/2611.17159)于 13 日 01:38:48、[FORGE](https://arxiv.org/abs/2611.17142)于 13 日 01:30:11、[HEIR](https://arxiv.org/abs/2611.17238)于 13 日 02:25:41 提交：已有[上一期精读](paper-reading/news/2026-11-13/README.md)，排除重复事件。
-- [ACE-CaP-0](https://arxiv.org/abs/2611.16872)于 12 日 22:38:40 提交：上一期已完成全文，本期不重新计为新论文。
-- [ProTEUS](https://arxiv.org/abs/2611.13348)于北京时间 10 日 07:19:33 提交：追加月列表分页候选核验显示首次提交在本期窗口之外，且研究对象为蛋白质演化，排除具身智能日报。
-- [InstantAMP](https://github.com/RoboticsResearchHubVN/InstantAMP)仓库创建于北京时间 13 日 14:44:30：README 描述可微世界模型和模拟 G1 训练，尚未独立验证“单卡三十分钟”及实现来源边界；按非官方实现候选评价，未达到 T2 入选线，不以标题充当已复现结论。
+[PEAR](https://github.com/mit-han-lab/pear)仓库北京时间 14 日 01:43:06 创建，已在[14 日日报](2026-11-14.md)收录，本期排除重复。[13 日精读](paper-reading/news/2026-11-13/README.md)与[14 日精读](paper-reading/news/2026-11-14/README.md)保留原归期，不改写成 15 日新论文。
 
 ### 📊 今日技术趋势
 
-本期主窗口确认的新代码是推理模型机器人 RL 的基础设施开放；两篇补记分别强调跨本体学习接口和执行过程中的条件反馈。三者对应训练、迁移和运行时三个不同问题，不能用某一项的成功率替代整个系统的泛化能力。实际部署仍须核对坐标转换、底层控制器、服务延迟和测试条件。
+本期核验的工程变化在于计算预算与执行后端：将可微世界模型训练拆到 CPU 仿真和笔记本 GPU，收益需要与吞吐、数值稳定性和评测范围一起看。训练回报、跟踪片段失败数与真实操作成功率属于不同证据。
 
-### 来源覆盖与精读状态
+### 来源覆盖与评分
 
-- 直接抓取官方 [cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent) recent 与 11 月列表。月列表另补读 AI 的 443 项和 LG 的 539 项末页，避免前 2,000 项截断。859 个去重预筛候选均取得摘要和版本时间：主窗口 v1 为 0，补充窗口 65，窗口外 794；未发现已核验候选在 14 日的 v2+ 更新。这是已公告列表的核验结果，不是未公告投稿的数量。
-- **来源检查不完整：** 最新公告为 13 日，周末投稿可能延后公告。TRI 页面直接请求超时、网页补查仍 403；IROS 403 且补查失败。HF 两个模型 API 请求超时，已改查 NVIDIA、LeRobot 官方组织页，但不能替代完整、带绝对时间的模型更新清单。PI 直接请求 429，网页补查成功。机构首页扫描也不代表全部实验室子项目穷尽。
-- 机构及会议扫描含 GEAR、PI、DeepMind、Skild、1X、Figure、RAI、TRI、Stanford、Berkeley、CMU、MIT、上海 AI 实验室、Unitree、CoRL、RSS、ICRA、IROS。相关论文优先回到 PDF 和作者项目页，代码与论文按事件去重。GitHub 主窗口新建与补充窗口仓库均有查询，未以创建时间替代论文首次发表时间。
-- 两篇笔记均完成全文与附录核对、grounding、八项笔记 lint、最终质量及中文可读性审查、正式保存和 SHA-256 校验。共 4 张已审图片，0 张占位图。[精读索引](paper-reading/news/2026-11-14/README.md)。PEAR 是本期核验的开源条目，没有冒充全文精读完成。
-- 两轮评分向量依次为 significance / novelty / evidence / relevance / community。research_paper 权重 4/3/2/1/0，open_source 为 2/2/2/3/1，engineering_tech 为 3/1/2/3/1。T1≥62、T1.5≥68、T2≥75；未核实社区讨论不给高热度分。
+已直接检查 [cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent) 及月列表；扫描 GEAR、PI、DeepMind、Skild、1X、Figure、RAI、TRI、Stanford、CMU、MIT、上海 AI 实验室等官方入口，及 CoRL/RSS/ICRA/IROS、四个仿真与学习库 release、GitHub 与 HF 渠道。
 
-| 事件 | 类型 | 第一轮 | 第二轮 | 平均分 |
-| --- | --- | --- | --- | ---: |
-| EgoX | research_paper | 9/8/8/10/1 | 8/8/9/10/1 | 85 |
-| Reins | research_paper | 8/9/8/10/1 | 8/8/8/10/1 | 83.5 |
-| PEAR 代码 | open_source | 9/9/8/10/2 | 9/8/8/10/2 | 83 |
-| SimReady 抓放教程 | engineering_tech | 5/4/8/9/2 | 5/4/8/9/2 | 64 |
-| InstantAMP 非官方实现 | open_source | 6/6/6/9/1 | 6/6/5/9/1 | 63 |
+**来源检查不完整：** PI 429，IROS 403，Berkeley 与 HF 模型 API 超时；机构首页扫描不代表全部子项目覆盖。本期未完成所有补充窗口候选的优先级比较，后续可补记，不应解读为已全面排除。
+
+M1mic-MLX 双评分向量依次为 significance/novelty/evidence/relevance/community：7/8/8/10/2 与 7/7/8/10/3。open_source 权重 2/2/2/3/1，两次 78、77，平均 77.5；官方实现作为一手技术说明，成绩仍保留作者报告边界。
+
+本期新增论文精读 0 篇：收录项按工程实现处理，未将未读全文伪称完成。[本期精读状态](paper-reading/news/2026-11-15/README.md)。
 
 ---
 
@@ -123,6 +68,7 @@ PEAR 的训练基础设施、部署和模型入口已聚簇为上方一个开源
 
 | 日期 | 日报 | 精读 |
 | --- | --- | --- |
+| 2026-11-15 | [日报](news/2026-11-15.md) | — |
 | 2026-11-14 | [日报](news/2026-11-14.md) | [2 篇](paper-reading/news/2026-11-14/README.md) |
 | 2026-11-13 | [日报](news/2026-11-13.md) | [5 篇](paper-reading/news/2026-11-13/README.md) |
 | 2026-11-12 | [日报](news/2026-11-12.md) | [4 篇](paper-reading/news/2026-11-12/README.md) |
