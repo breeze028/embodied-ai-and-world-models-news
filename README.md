@@ -2,228 +2,214 @@
 
 > 具身智能与世界模型每日研究动态与论文精读。
 
-**最新一期：2026-11-16** ｜ [日报原文](news/2026-11-16.md) · [精读索引](paper-reading/news/2026-11-16/README.md) · [历史归档](#历史归档)
+**最新一期：2026-11-17** ｜ [日报原文](news/2026-11-17.md) · [精读索引](paper-reading/news/2026-11-17/README.md) · [历史归档](#历史归档)
 
 ---
 
-<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-16.md 自动镜像，请勿手工编辑 -->
+<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-17.md 自动镜像，请勿手工编辑 -->
 
-## 2026-11-16 Embodied AI & World Models Daily
+## 2026-11-17 Embodied AI & World Models Daily
 
-> 面向具身智能 / Robotics 研究员与工程师的研究与工程资讯。主窗口：北京时间11月16日00:00—23:59；补充窗口：11月14—15日。本期3篇必读、10篇雷达、4篇已完成精读。来源检查有缺口，详见末尾。
+> 面向具身智能 / Robotics 研究员与工程师。主窗口为北京时间11月17日，补充窗口15—16日。本期3篇必读、9篇雷达、4篇已完成精读。PI、Hugging Face等来源检查不完整，不能据此断言全天没有其他资讯。
 
 ### 🔥 今日必读
 
-#### 1. 【运动与全身控制】XMimic / XSoma：缩短世界模型训练关键路径，四张H100在一分钟内达标
+#### 1. 【VLA与基础模型】ScaleVLA：把552B冻结表示直接接到连续动作头
 
-**来源：** [arXiv:2611.20452v1](https://arxiv.org/abs/2611.20452v1)（cs.RO；TU Darmstadt等）  
+**来源：** [arXiv:2611.21607v1](https://arxiv.org/abs/2611.21607v1)（cs.RO；清华、北大、上海交大、Galbot）  
 **类型：** Paper  
-**发布时间：** arXiv首次提交北京时间2026-11-16 11:22；作者代码及PDF此前已有公开记录，不能解释为所有资源当日首发。  
-**评分：** 89.50/100  
-**关键词：** World Model · Humanoid · JAX
+**发布时间：** arXiv v1北京时间2026-11-17 02:59  
+**评分：** 88.45/100  
+**关键词：** Frozen VLM · Flow Matching · Scaling
 
-**一句话：** 将采样、世界模型学习和策略更新拆到多卡流水，沿短期想象轨迹传播解析梯度；XMimic做动作跟踪，XSoma做粗糙地形速度跟踪。
+**一句话：** 在保持动作DiT、初始化和监督预算相同的比较中，将VLM表示扩到552B；不生成文字推理，只运行因果编码器并将特征映射为动作片段。
 
-![训练流水时间线](paper-reading/news/2026-11-16/xmimic/images/page_002_fig_fig_2_review.png)
+![ScaleVLA表示到动作的接口](paper-reading/news/2026-11-17/scalevla/images/page_004_fig_figure_2_review.png)
 
 **技术要点：**
 
-- 整个训练循环包括MJX/MuJoCo Warp使用JAX编译，减少串行等待；多卡付出一到两轮参数陈旧的代价，换取吞吐。
-- XMimic使用32步展开和critic；XSoma使用48步约一秒展开、取消critic，并将精确运动学与地形奖励留在网络外。三组策略梯度依次应用而非求平均。
-- 仿真G1上，XMimic四H100达标0.86分钟，对比BlinkMimic单卡3.19分钟；XSoma四卡0.77分钟，对比FastSAC单卡9.44分钟。单卡XMimic为2.47分钟，单卡XSoma为2.50分钟，不能把多卡壁钟倍数当作单卡算法增益。
-- 主计时排除编译启动和离线评估；缓存编译20—40秒、冷编译可能3分钟。论文明确尚无真机部署，四卡也不等于减少总GPU成本。
+- 冻结DeepSeek-V4.1-Flash-1017骨干，在编码器—解码器接口读出；适配器和32层动作DiT从零训练，四步flow积分复用一次骨干特征。MoE总参数不等于每token激活量，也不等于完整552B计算图都执行。
+- LIBERO四套件96.1%；LIBERO-PRO45.1%，对比小骨干最佳31.3%。Goal10示范87.8%超过2B用50示范85.6%，但归一化统计仍来自全量训练数据，固定5000步也不是收敛后或等总算力比较。
+- 真机插头参考布局9/10、空间扰动8/15，对比2B的4/10、5/15；只有一个训练种子，π0.5参考为8/10、7/15，小样本不能宣称稳定显著优于后者。
+- RoboCasa四H200中位215.8ms/片段，对比2B单H200114.7ms；真实机器人384ms/片段。计时和成功率使用不同部署路径，未逐元素验证特征一致，不能把216ms直接当真机延迟。
 
-**为什么值得关注：** 世界模型路线的工程价值需要从迭代关键路径衡量。可优先复用其可微短期训练与分卡策略，再实测冷启动、GPU分钟和目标阈值；不要只追“一分钟”的宣传数字。
+**为什么值得关注：** 强表示可能减少机器人监督需求，并改善精密插接；但应把模型家族、输入量、优化预算和硬件拆开，再判断规模本身的作用。
 
-**资源：** [Paper](https://arxiv.org/abs/2611.20452v1) · [作者PDF](https://nico-bohlinger.github.io/papers/2026_xmimic_xsoma.pdf) · [XMimic](https://github.com/nico-bohlinger/xmimic) · [XSoma](https://github.com/nico-bohlinger/xsoma) · [全文精读](paper-reading/news/2026-11-16/xmimic/xmimic.md)。未确认独立社区复现。
+**资源：** [Paper](https://arxiv.org/abs/2611.21607v1) · [项目页](https://galaxygeneralrobotics.github.io/scalevla/) · [项目列出的代码](https://github.com/GalaxyGeneralRobotics/ScaleVLA) · [全文精读](paper-reading/news/2026-11-17/scalevla/scalevla.md)。未验证独立训练复现或权重可下载性。
 
-#### 2. 【世界模型】ThinkWAM：先提出动作，再修正潜在未来，最后重新生成动作
+#### 2. 【世界模型】DreamFAR：用接触变化选关键帧，减缓分钟级视频展开遗忘
 
-**来源：** [arXiv:2611.21258v1](https://arxiv.org/abs/2611.21258v1)（cs.RO；西安交通大学等）  
+**来源：** [arXiv:2611.22001v1](https://arxiv.org/abs/2611.22001v1)（cs.RO；Amazon FAR及合作高校）  
 **类型：** Paper  
-**发布时间：** arXiv首次提交北京时间2026-11-16 23:30  
-**评分：** 87.15/100  
-**关键词：** World-Action Model · Latent Prediction · Action Refinement
+**发布时间：** arXiv v1北京时间2026-11-17 07:31  
+**评分：** 86.95/100  
+**关键词：** Contact Memory · Streaming · Robot-Native Data
 
-**一句话：** 用首轮动作片段修正一次性预测的多时域未来潜变量，再将修正后的未来送回同一个动作头，第二轮生成的片段才真正执行。
+**一句话：** 由模型预测接触建立/解除来写入关键帧，再按末端位姿检索；以固定长期槽和短期密集上下文保留离开视野后的交互状态。
 
-![ThinkWAM两轮动作与潜变量反馈](paper-reading/news/2026-11-16/thinkwam/images/page_004_fig_figure_2_review.png)
+![DreamFAR接触记忆与流式生成](paper-reading/news/2026-11-17/dreamfar/images/page_003_fig_figure_2_review.png)
 
 **技术要点：**
 
-- 多时域未来直接并行预测，近处保留更多token；首轮提案通过残差头影响未来表示，不是动作残差相加，也不是重复生成视频。
-- 两轮共享flow-matching动作头，各4个Euler步。接触热图摘要只改动作侧记忆；RoboTwin没有对应标签，关闭该分支。
-- LIBERO为1974/2000，即98.70%；LIBERO-Plus七类别宏平均84.76%；RoboTwin固定20任务Clean/Random为85.75%/65.85%，不能当成全50任务结果；RoboCasa24为65.17%。
-- Galaxea A1Z单模型90回合OOD中成功58次，64.4%，对比π0.5的51/90、FastWAM的34/90。三个条件都要求双目标完成，属于同一拾取任务族。
-- 完整模型84.76%，两轮但用未修正未来81.59%，支持潜在反馈有用；这不是任意动作的反事实动力学证明。基线数据、片段长度与积分步数不同，不能将101.2ms/片段解读为完全公平的计算效率排名。
+- 单位球潜变量限制尺度漂移，8帧长期记忆补充5秒近期历史，永久sink和滚动KV服务流式生成。16个在途帧提供10Hz吞吐，也引入16步、约1.6秒流水延迟；不能等同100ms动作反馈。
+- 主动力学1.9B，256H200训练六天；图像tokenizer使用预训练SSDD初始化。“无互联网视频动力学预训练”不等于所有模块完全从零。
+- 公共ABC公平比较另用约0.8B版本，与WEAVER等在同数据划分上训练。1000留出回合、15秒真实初始化后预测60秒，PSNR16.4dB，对比Cosmos15.8、WEAVER14.5、IWS11.0；视觉指标不等同精确接触物理。
+- 模拟与真实任务平均进度相关r=0.71仅来自三个任务×两个检查点的六个点，模型绝对进度偏乐观。单任务混合75真实+75模型示范达到63%进度，但相对75真实对照同时多了一倍数据，且只有10次实机试验。
 
-**为什么值得关注：** 它给WAM补上动作提案到未来条件的部署反馈接口。下一步值得检查的是错误提案对应的真实未来，而不是仅看潜变量确实变化。
+**为什么值得关注：** 接触事件可作为记忆写入的有意义边界，比固定间隔采帧更有针对性。模型内评测仍需真实硬件复核，不能成为唯一部署门槛。
 
-**资源：** [Paper](https://arxiv.org/abs/2611.21258v1) · [项目页](https://thinkwam-project.github.io/) · [GitHub](https://github.com/HaoyunT/Thinkwam) · [作者给出的Weights地址](https://huggingface.co/Adrain11/ThinkWAM) · [全文精读](paper-reading/news/2026-11-16/thinkwam/thinkwam.md)。代码与项目页可访问；Hugging Face可用性及权重文件未能独立核验。
+**资源：** [Paper](https://arxiv.org/abs/2611.22001v1) · [项目页](https://www.yimingdou.com/DreamFAR/) · [GitHub](https://github.com/amazon-far/dreamfar) · [全文精读](paper-reading/news/2026-11-17/dreamfar/dreamfar.md)。项目及仓库可访问，本次没有运行模型。
 
-#### 3. 【操作与抓取】ForceHarness：把高频接触留给自终止原语，把物理量反馈给冻结模型
+#### 3. 【模仿学习与策略】ALOHA Lightning：高速直接示教，加同域遮罩和片段平滑
 
-**来源：** [arXiv:2611.21099v1](https://arxiv.org/abs/2611.21099v1)（cs.RO；NUS Show Lab）  
+**来源：** [arXiv:2611.21919v1](https://arxiv.org/abs/2611.21919v1)（cs.RO；Stanford）  
 **类型：** Paper  
-**发布时间：** arXiv首次提交北京时间2026-11-16 21:44  
-**评分：** 86.65/100  
-**关键词：** Force Control · Frozen Model · Tool Interface
+**发布时间：** arXiv v1北京时间2026-11-17 05:31  
+**评分：** 86.35/100  
+**关键词：** Kinesthetic Teaching · ACT · Fast Manipulation
 
-**一句话：** 用本地闭环力原语执行和终止接触动作，再把力轨迹转换成重量、摩擦、刚度和插入量等物理反馈，让慢速API模型选择下一步。
+**一句话：** 人直接握住可反驱双臂末端采集高速动作，训练和部署都遮罩操作者区域，再通过重叠片段平滑维持快速、连续的执行。
 
-![ForceHarness三层控制接口](paper-reading/news/2026-11-16/forceharness/images/page_004_fig_figure_2_review.png)
+![随末端更新的遮罩示意](paper-reading/news/2026-11-17/aloha-lightning/images/page_002_fig_fig_3_review.png)
 
 **技术要点：**
 
-- 从腕部传感器或关节外力矩估计力，做静止校零；阻抗与导纳原语独立响应接触、停滞、阻力下降、目标深度与限值。模型等待期间先卸载位置超前。
-- 原语实测中位14.9Hz，底层关节阻抗1kHz，不能说大模型在1kHz力控。物理量的不确定度主要描述测量误差，不包含全部模型偏差。
-- 实际FR3六任务各10次，Astra从无力反馈2/60到54/60，即3.3%→90%；Sol为47/60。结果依赖人工菜单、参数、校准和含操作提示的指令，“不微调模型”不等于无工程先验。
-- ForceBench提高17.5个百分点、HiddenPhys提高34.3个百分点；但测试种子参与过调试，部分对照输入与训练预算不同。小模型物理量反馈的决策改善显著，最终成功率相对原始力的差异p=0.19，不显著。
+- 100Hz重力补偿、50Hz三视图及关节采集；ACT预测未来关节位置。操作者采集时有直接触感，不表示策略部署输入含触觉。
+- FK与标定确定人手臂区域，训练部署同样置零，减少视觉域偏移；相邻动作片段重叠，用sigmoid权重交接，避免每步推理与平均过时轨迹。
+- 每任务50示范，五项任务报告超过80%成功；拔杯3.97秒、电池5.70秒、收桌6.81秒、接抛球1.85秒。普通主从电池任务17.87秒，单纯加倍播放仍慢且精度下降。
+- 局限包括近手有效信息被遮掉、无触觉、专门硬件及有限工作台扰动。七人用户研究支持采集易上手，但不代表普适人因结论。
 
-**为什么值得关注：** 对已有API模型与力矩传感机器人，这是一条更清晰的系统分工：让本地控制层处理接触时序，让模型读取有语义的执行结果。当前证据主要覆盖单臂准静态接触，尚不能外推到任意硬件和高速动作。
+**为什么值得关注：** 高速策略需要真实高速数据与执行机制配合，不能靠把慢策略控制频率翻倍获得。对采集流水线的改造可能比继续扩大策略网络更直接。
 
-**资源：** [Paper](https://arxiv.org/abs/2611.21099v1) · [全文精读](paper-reading/news/2026-11-16/forceharness/forceharness.md)。文中[项目地址](https://showlab.github.io/ForceHarness)本次返回404；未找到可确认公开可用的官方代码，不将发布承诺当成已开源。
+**资源：** [Paper](https://arxiv.org/abs/2611.21919v1) · [项目页](https://flash-aloha.github.io/) · [项目列出的代码](https://github.com/JohnYao93/flash-aloha) · [全文精读](paper-reading/news/2026-11-17/aloha-lightning/aloha-lightning.md)。代表图选方法遮罩图，原文无统一全流程架构图。
 
 ### 📄 论文雷达
 
-以下未精读条目基于官方摘要及版本页，不声称完成全文实验复核。评分是编辑判断，不能替代独立复现。
+#### 【VLA与基础模型】InteractVLA：让Agent用几何目标引导、检查和修补VLA动作
 
-#### 【VLA与基础模型】ReRead：读出冻结策略已经算好的时序信息
+**来源：** [arXiv:2611.22584v1](https://arxiv.org/abs/2611.22584v1)  
+**发布时间：** 北京时间2026-11-17 19:07  
+**关键词：** Test-Time Guidance · Soft-Time Alignment · RSI  
+**核心贡献：** 冻结动作专家，对输入求梯度，将完整末端目标软匹配到合适执行步，并把动作与相机重投影反馈给Agent。LIBERO-Plus在线98.3%，加RSI后99.4%；RoboDojo对应26.0%与48.62%，不能混成同一预算。
 
-**来源：** [arXiv:2611.20465v1](https://arxiv.org/abs/2611.20465v1)  
-**发布时间：** 北京时间11月16日11:33  
-**关键词：** Native KV · History · Residual Correction  
-**核心贡献：** 读取当前和两个历史决策的原生KV缓存，训练动作残差修正器，不重编码图像。FastWAM全50任务同实验配对从90.73%到92.66%；Hard11从73.45%到81.45%，但这11项来自训练过的50任务。
+![InteractVLA软时间几何接口](paper-reading/news/2026-11-17/interactvla/images/page_002_fig_figure_2_review.png)
 
-![ReRead缓存与动作修正](paper-reading/news/2026-11-16/reread/images/page_004_fig_figure_2_review.png)
+**值得关注程度：** 84.65/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22584v1) · [GitHub](https://github.com/LingwuPro/InteractVLA) · [全文精读](paper-reading/news/2026-11-17/interactvla/interactvla.md)。真机表报告任务分数，不应转写为成功率；不同对照的练习预算与评测子集存在差异。
 
-**值得关注程度：** 85.35/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.20465v1) · [全文精读](paper-reading/news/2026-11-16/reread/reread.md)。A100额外11.66ms，修正器198.52M参数；真实相位歧义任务0/50→18/50，不代表通用长程成功。文中[代码地址](https://github.com/tan2355/reread)本次返回404。
+#### 【运动与全身控制】Body Schema Policy：以运动学树组织视觉到动作接口
 
-#### 【数据与Benchmark】WinDEX：野外公制手部重建服务于遥操作与策略学习
+**来源：** [arXiv:2611.22713v1](https://arxiv.org/abs/2611.22713v1)  
+**发布时间：** 北京时间2026-11-17 20:52  
+**关键词：** Body Schema · Loco-Manipulation  
+**核心贡献：** 在关节/连杆token上学习螺旋运动，并由各身体部位查询视觉证据。作者报告九项G1仿真任务以少75倍参数匹配Ψ0并展示真实G1和Fetch；模型大小优势仍需结合具体任务与训练数据理解。  
+**值得关注程度：** 82.55/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22713v1)
 
-**来源：** [arXiv:2611.21143v1](https://arxiv.org/abs/2611.21143v1)  
-**发布时间：** 北京时间11月16日22:14  
-**关键词：** Egocentric Stereo · Hand Data  
-**核心贡献：** 融合双目几何、惯性里程计和时序优化，构建1000小时手部标注及蒸馏流式模型。作者报告离线43.61FPS、流式171FPS，世界坐标关节误差37.29mm；重建误差与下游策略收益应分别验证。  
-**值得关注程度：** 80.95/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.21143v1)
+#### 【数据与Benchmark】真实机器人数据质量：校准、可见信息和操作补偿会进入策略
 
-#### 【感知与多模态】TaF-Foundation：用六维力旋量对齐异构触觉
+**来源：** [arXiv:2611.22388v1](https://arxiv.org/abs/2611.22388v1)  
+**发布时间：** 北京时间2026-11-17 16:38  
+**关键词：** Teleoperation · Calibration · Data Quality  
+**核心贡献：** 结合25种双臂工作空间研究、遥操作控制和π0.5微调，报告策略保留约90%示范额外绕路，测试校准不匹配30次全失败。应优先测操作和标定系统，标题的大数据规模不等于所有结论都在该规模受控验证。  
+**值得关注程度：** 82.15/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22388v1)
 
-**来源：** [arXiv:2611.20718v1](https://arxiv.org/abs/2611.20718v1)  
-**发布时间：** 北京时间11月16日16:25  
-**关键词：** Tactile · Cross-Sensor · Wrench  
-**核心贡献：** 将24个、四类原理的触觉传感器观测配对到共同wrench监督，收集超1亿对样本。作者报告力RMSE下降17.1%，四项实机任务平均成功46.25%，对照23.75%；不要求传感器之间直接成对。  
-**值得关注程度：** 80.25/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.20718v1)
+#### 【运动与全身控制】Heave-Ho：从双人形训练到多机器人去中心协作
 
-#### 【模仿学习与策略】VLA-SSD：随机单步蒸馏为flow策略后训练提供密度
+**来源：** [arXiv:2611.22275v1](https://arxiv.org/abs/2611.22275v1)  
+**发布时间：** 北京时间2026-11-17 14:21  
+**关键词：** Multi-Agent · Tracking · Speech Coordination  
+**核心贡献：** 低层后训练跟踪基础模型以适应物理耦合，高层视觉语言规划配合语音领导—跟随同步。HH-Bench含12项、2—10机器人任务，作者展示异构团队及实机；语音协作不等于没有信息通信。  
+**值得关注程度：** 81.45/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22275v1)
 
-**来源：** [arXiv:2611.20460v1](https://arxiv.org/abs/2611.20460v1)  
-**发布时间：** 北京时间11月16日11:28  
-**关键词：** Flow Matching · Distillation · GRPO  
-**核心贡献：** 以Brownian路径条件化单跳生成器，将多步flow动作头蒸馏成有条件密度的随机单步策略。动作头前向提速7.7倍伴随LIBERO成功率相对下降5.5%；另报告π0.5经GRPO相对改善20.6%，不是百分点。  
-**值得关注程度：** 79.75/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.20460v1)
+#### 【模仿学习与策略】Progress Predicts Policy：让标量进度场的导数产生动作
 
-#### 【运动与全身控制】QTOP：用分位数critic缓解大规模动作跟踪干扰
+**来源：** [arXiv:2611.22491v1](https://arxiv.org/abs/2611.22491v1)  
+**发布时间：** 北京时间2026-11-17 17:46  
+**关键词：** Gradient Policy · World Model  
+**核心贡献：** 把语言条件潜在进度场与世界模型组合，在固定参考命令处读动作梯度，连续命令用正增益、离散命令用有限差分。用模仿与双重反传约束局部控制几何，不只拟合示范时间进度。  
+**值得关注程度：** 80.75/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22491v1)
 
-**来源：** [arXiv:2611.20791v1](https://arxiv.org/abs/2611.20791v1)  
-**发布时间：** 北京时间11月16日17:37  
-**关键词：** Distributional RL · Tracking · Scaling  
-**核心贡献：** 以状态和参考运动条件化的分布式优势估计提升跟踪RL样本效率。摘要报告仿真和真实跟踪相对多类基线最高约10%改善，并讨论计算量与数据量缩放；具体增益口径仍需全文和代码对齐。  
-**值得关注程度：** 79.25/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.20791v1)
+#### 【数据与Benchmark】HubEgo-100K：首版是10124小时职业技能视频
 
-#### 【操作与抓取】DexFormer 2.0：面向多臂手组合的共享抓取策略
+**来源：** [arXiv:2611.21938v1](https://arxiv.org/abs/2611.21938v1)  
+**发布时间：** 北京时间2026-11-17 05:56  
+**关键词：** Egocentric Data · IMU · Skilled Work  
+**核心贡献：** v1.0含12227位贡献者、15548个环境、72754回合1080p视频和100Hz IMU，83%来自工作场景。100K是后续目标，不是当前已发布小时；动作语言为机器标注，尚待下游机器人基准验证。  
+**值得关注程度：** 79.05/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.21938v1)
 
-**来源：** [arXiv:2611.20273v1](https://arxiv.org/abs/2611.20273v1)  
-**发布时间：** 北京时间11月16日06:06  
-**关键词：** Cross-Embodiment · Dexterous · Memory  
-**核心贡献：** 用统一关节接口与有效掩码、运动学树注意力偏置及Transformer-XL记忆适配本体差异。18组合训练后已见组合89%、6个留出组合51%，并展示Flexiv双手型实机迁移；组合外性能仍明显下降。  
-**值得关注程度：** 78.95/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.20273v1)
+#### 【世界模型】ReLAP：在JEPA空间递归预测，预训练连续潜在动作
 
-#### 【开源项目】RoboKit：统一GPU并行可微优化工具链
+**来源：** [arXiv:2611.22077v1](https://arxiv.org/abs/2611.22077v1)  
+**发布时间：** 北京时间2026-11-17 09:56  
+**关键词：** Latent Action · Recurrent Prediction  
+**核心贡献：** 相邻观察逆动力学提取潜在动作，多步未来损失反传约束早期动作，再蒸馏给VLM并用机器人flow动作适配。部署去掉显式潜在动作/世界模型分支；作者报告11M样本下LIBERO97.9%、Plus70.0%。  
+**值得关注程度：** 78.75/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22077v1)
 
-**来源：** [arXiv:2611.20185v1](https://arxiv.org/abs/2611.20185v1)  
-**发布时间：** 北京时间11月16日02:40  
-**关键词：** Differentiable Optimization · GPU  
-**核心贡献：** 把多初值求解、几何、渲染和物理可微计算组合为机器人优化工具。作者报告七任务2—60倍加速、4096个抓取2.97秒；蒸馏和RL还有单独收益，跨任务最大倍数不应视为所有配置统一加速。  
-**值得关注程度：** 78.95/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.20185v1)
+#### 【端侧部署】Anchored Path Matching：让学生轨迹上的端点与局部更新共同受监督
 
-#### 【数据与Benchmark】Robotic Reward Models：区分执行进度与任务状态
+**来源：** [arXiv:2611.22592v1](https://arxiv.org/abs/2611.22592v1)  
+**发布时间：** 北京时间2026-11-17 19:15  
+**关键词：** WAM · Distillation · Gradient Conflict  
+**核心贡献：** 从学生实际达到的状态续跑教师，提供零噪声端点和首个中间状态；冲突时优先保留端点梯度。同检查点支持1/2/4步，单步Clean/Random相对基础蒸馏提高2.0/1.4个百分点，最大时延倍数需保留八步教师参照。  
+**值得关注程度：** 77.65/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22592v1)
 
-**来源：** [arXiv:2611.20741v1](https://arxiv.org/abs/2611.20741v1)  
-**发布时间：** 北京时间11月16日16:45  
-**关键词：** Reward Model · Evaluation  
-**核心贡献：** 按输出语义整理114项奖励模型，提出1117条真实机器人视频组成的RRM-Bench-1K，比较27个评估器。主要警示是执行顺序一致与下游收益并不保证密集奖励识别真实任务状态或缺失视角。  
-**值得关注程度：** 78.85/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.20741v1)
+#### 【数据与Benchmark】FailureGen：将已观察失败动作迁入新情景生成失败视频
 
-#### 【端侧部署】POKE：离线动作敏感度蒸馏，避免剪枝评分自我锁定
+**来源：** [arXiv:2611.22367v1](https://arxiv.org/abs/2611.22367v1)  
+**发布时间：** 北京时间2026-11-17 16:21  
+**关键词：** Synthetic Failure · Cosmos · Evaluation  
+**核心贡献：** 微调动作条件Cosmos，标注失败供体和兼容宿主、迁移动作并过滤生成事件。初步检测实验AP从0.41到0.51，检出28/36到33/36；不是由任意动作生成物理真实失败的证明。  
+**值得关注程度：** 76.55/100  
+**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22367v1)
 
-**来源：** [arXiv:2611.21033v1](https://arxiv.org/abs/2611.21033v1)  
-**发布时间：** 北京时间11月16日20:52  
-**关键词：** Token Pruning · Action Sensitivity  
-**核心贡献：** 在完整计算图离线估计视觉token的动作一阶敏感度，再蒸馏到不足0.3M参数学生。保留32/512 token时，OpenVLA-OFT与π0.5报告95.2%/90.8%成功、1.85/1.26倍提速，优先核对跨平台时延与分布外代价。  
-**值得关注程度：** 78.85/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.21033v1)
-
-#### 【感知与多模态】WiTac：让触觉先结合腕部视觉再进入策略
-
-**来源：** [arXiv:2611.21057v1](https://arxiv.org/abs/2611.21057v1)  
-**发布时间：** 北京时间11月16日21:08  
-**关键词：** Touch · Wrist Vision · VLA  
-**核心贡献：** 在近300小时SharpaDex数据上联合触觉、手部运动和腕部视图预训练接触表示，再注入两种VLA。作者报告四项接触任务平均改善28.8%/15.0%，并做无腕部视觉对照；本条保留摘要口径，不自行改写为百分点。  
-**值得关注程度：** 77.95/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.21057v1)
+未精读的八条雷达基于官方摘要与版本页，数值保持作者口径，不标为全文实验已复核。全期评分均为编辑判断，而非独立复现的统计结论。
 
 ### 🛠 工程与开源
 
-- **XMimic / XSoma复现入口：** 两个[官方JAX仓库](https://github.com/nico-bohlinger/xmimic)及[XSoma](https://github.com/nico-bohlinger/xsoma)的README均可访问，说明任务、计时、GPU数量和执行布局。与上文为同一论文事件，不重复计分，也不将早于本窗口的仓库更新写成今日新版本。本次只核对说明和公开可访问性，没有实际训练复现。
-- **ThinkWAM复现入口：** [官方代码](https://github.com/HaoyunT/Thinkwam)说明包含模型、数据适配、五套附录训练配方和评测工具；外部数据、模拟器、V-JEPA与文本资产另装。作者列出[权重地址](https://huggingface.co/Adrain11/ThinkWAM)，本次HF访问存在超时，未验证文件可下载。与上文聚为一个事件。
-- **版本排查：** [MuJoCo](https://github.com/google-deepmind/mujoco/releases)、[Genesis](https://github.com/Genesis-Embodied-AI/Genesis/releases)、[Isaac Lab](https://github.com/isaac-sim/IsaacLab/releases)、[LeRobot](https://github.com/huggingface/lerobot/releases)已检查，当前查得最近正式版本日期均在本窗口前，不将其作为当日发布。新建仓库检索覆盖robotics、VLA、world model、robot learning；星数和创建日期仅作线索，没有据此补凑独立工程条目。
+- **DreamFAR：** [官方仓库](https://github.com/amazon-far/dreamfar)创建于UTC16日21:37，即北京时间17日05:37，属于主窗口。与论文聚成同一事件，不重复计分。项目可作为训练、推理和交互示范入口；权重下载和运行速度本次未实测。
+- **InteractVLA：** [官方仓库](https://github.com/LingwuPro/InteractVLA)创建于UTC17日09:24，即北京时间17日17:24。可微动作专家与标定是接入条件，不能把任意黑盒VLA API直接变成可反传接口。
+- **版本排查：** [Genesis v1.4.7](https://github.com/Genesis-Embodied-AI/genesis-world/releases/tag/v1.4.7)是UTC17日17:18，即北京时间18日01:18，明确排除本期；其非刚体求解、耦合器和确定性修复留待18日报，不因UTC日期相同误收。MuJoCo、Isaac Lab、LeRobot查得的最近正式版本均早于本窗口。
 
 ### 💬 社区信号
 
-本次未确认足以单独收录的多源技术讨论或独立复现。已查看Hacker News与GitHub检索线索；不把作者自述、同源转发或新仓库少量星标写成“社区热议”。
+已检查Hacker News和GitHub新建仓库线索，尚未确认可单列的独立复现、技术争议或多源集中讨论。作者仓库与项目页只证明资源入口，不等于社区验证；不把少量星标作为研究热度证据。
 
 ### 🔎 补充窗口筛选记录
 
-补充窗口仅用于补漏，不把旧日期工作伪装成16日首发。以下代表性排除记录按官方v1北京时间登记：
+以下按v1实际北京时间归属，不把公告日或UTC日期直接当发布日期：
 
-- [arXiv:2611.19904v1](https://arxiv.org/abs/2611.19904v1)，2026-11-15 17:33：DiffWAM与当日WAM主题相关，但本期优先展开已全文核验的ThinkWAM；列为补充候选，不冒充16日首发。
+- [arXiv:2611.20452v1](https://arxiv.org/abs/2611.20452v1)，2026-11-16 11:22：11月16日报已精读XMimic/XSoma，按同一事件去重。
 
-- [arXiv:2611.19771v1](https://arxiv.org/abs/2611.19771v1)，2026-11-15 11:51：JEPA4R在补充窗口，未超过本期主文的证据复核优先级；不因标题包含JEPA直接入选。
+- [arXiv:2611.21258v1](https://arxiv.org/abs/2611.21258v1)，2026-11-16 23:30：11月16日报已精读ThinkWAM，不因今天继续被讨论重发。
 
-- [arXiv:2611.19774v1](https://arxiv.org/abs/2611.19774v1)，2026-11-15 12:01：VLA安全研究相关，但本期雷达数量有限；未完成其攻击设置全文审查，避免转述过强安全结论。
+- [arXiv:2611.21099v1](https://arxiv.org/abs/2611.21099v1)，2026-11-16 21:44：11月16日报已精读ForceHarness，本次未确认需独立收录的重大更新。
 
-- [arXiv:2611.19857v1](https://arxiv.org/abs/2611.19857v1)，2026-11-15 15:45：主要为驾驶视频与4D场景生成，未据摘要确认本期所需的通用机器人决策增量。
+- [arXiv:2611.20465v1](https://arxiv.org/abs/2611.20465v1)，2026-11-16 11:33：11月16日报已精读ReRead，不将普通资源变化假设成新论文。
 
-- [arXiv:2611.19247v1](https://arxiv.org/abs/2611.19247v1)，2026-11-14 16:22：游戏交互世界模型有技术线索，但具体分工由引擎保留规则与状态；本期优先机器人控制证据，不按通用物理世界模型宣传。
+ScaleVLA在UTC16日提交但北京时间17日，昨日已明确留给本期，现已完成全文和附录精读。纯驾驶、纯SLAM、检测、零售预测、deepfake检测以及没有具身决策落点的软件Agent，不因标题包含World Model或Robot自动入选。
 
-另行排除[ScaleVLA](https://arxiv.org/abs/2611.21607v1)：官方v1是北京时间11月17日02:59，虽在UTC16日提交，仍在本期主窗口之外；留给17日报处理。普通旧论文修订、纯驾驶、纯SLAM/检测、软件Agent和与决策无关的生成工作不因关键词自动收录。
+### 📊 今日技术趋势
 
-### 📈 趋势与判断
+今天的主线分别从强表示、高速示范和交互记忆降低机器人控制难度。它们也暴露三种成本：大骨干的多卡推理、直接示教的硬件与域对齐，以及流式世界模型的反馈延迟和乐观偏差。判断实用性应同时看数据信息来源、真实任务完成时间与闭环评测，而不是只比较模型参数、FPS或视频质量。
 
-三个不同层面的瓶颈正在被拆开：训练侧把世界模型的迭代依赖链拆开，动作侧让提案影响潜在未来，执行侧把接触闭环放进本地工具。ReRead则提醒，扩充观测之前应先检查现有缓存是否已包含正确动作线索。上述是本期论文的并列编辑观察，不是已经验证的统一方案。
+### 📚 精读与检索覆盖
 
-### 📚 精读与发布前检查
+已完成4篇：[精读索引](paper-reading/news/2026-11-17/README.md)。全文、附录覆盖和图像均经核对，证据规划、八项Final Note Lint、质量/可读性审查、正式保存与SHA一致性均通过；4张图物化，0占位。ALOHA代表图为遮罩方法示意，原文没有统一全流程架构图；关键结果和消融用笔记表格及正文解释。
 
-已完成4篇：[精读索引](paper-reading/news/2026-11-16/README.md)。每篇均核对全文与附录（XMimic无附录），完成证据规划、视觉审查、八项笔记lint、质量及可读性审查、正式保存与SHA-256一致性检查。每篇1张完整代表图，合计4张物化、0占位；其余决定性比较及消融在表格与正文中保留。未精读雷达未嵌图，也未标为全文已验证。
+- **官方列表：** 直接取得[cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent)recent及11月月列表，公告已覆盖18日。recent分别436、1420、1407、985条；月列表RO1023条，AI/LG/CV各取前2000条，不能声称后三类整月穷尽。
+- **时间核验：** 宽召回1170个去重候选，按v1北京时间为主窗口97、补充112、窗外961。已在上次取得的摘要/历史复用其固定v1时间，新ID重新请求；入选精读另由本次pipeline重新确定身份与PDF。该数量不是相关论文数量，也不表示1170篇全文都已阅读；普通修订和未确认更新不当新成果。
+- **筛选：** 按PASS/BLOCK/UNKNOWN、双次五维评分、事件聚簇和价值排序执行；研究论文权重4/3/2/1/0，T1门槛62。评分不靠机构名气或星标，全文复核限制已影响主文证据判断。正文只展示平均分，运行记录保留两次维度向量。
+- **机构与生态：** NVIDIA GEAR、DeepMind、Skild、1X、Figure、RAI、TRI、Stanford、Berkeley、MIT、CMU、上海AI实验室、Unitree、Deep Robotics，以及CoRL/RSS/ICRA/IROS入口可访问；GitHub四组新建仓库与四个仿真/机器人生态版本源已检查。入口可访问不证明全部渠道更新穷尽。
+- **明确缺口：** Physical Intelligence返回429；NVIDIA与LeRobot的Hugging Face模型接口超时。不能将来源不可访问描述为当天没有资讯，也不声称作者权重均已验证可下载。
 
-### 来源覆盖与边界
-
-- **arXiv官方入口：** 直接检查[cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent)的recent与11月月列表。recent分别解析512、1641、1705、1095条，已见17日公告；月列表分别934、2000、2000、2000条，后三类月列表只取前2000条。不能把月列表前页当成完整整月覆盖。
-- **时间核验：** 对宽召回的1065个去重候选逐页取得摘要与提交历史，74篇v1在16日、90篇在14—15日、901篇在窗外；全部以v1实际北京时间分类，公告日期不替代投稿时间。1065是宽召回数，不是1065篇都与具身相关或完成全文阅读。其余未入选候选不等于已证明没有价值。
-- **筛选与评分：** 先排除无具身决策落点的工作，再按技术份量、信息增量、证据、相关性、社区五项双次评估，研究论文权重4/3/2/1/0，T1阈值62；入选事件以两次平均分展示，论文、项目与代码聚簇去重。未确认热度不编造热度数据，评分不代表统计检验。
-- **机构与会议：** 已直接检查NVIDIA GEAR、1X、Figure、Stanford、TRI、RAI、Berkeley、上海AI实验室、Unitree、Deep Robotics、MIT、CMU、Skild，以及CoRL/RSS/ICRA/IROS入口；DeepMind原入口超时，博客回退可访问。网页可访问不意味着其中每项都属于本日，也不能证明所有机构所有渠道均已穷尽。
-- **明确失败：** Physical Intelligence主页及research回退均HTTP429；Hugging Face的NVIDIA与LeRobot渠道原入口及API回退超时；ReRead文中代码地址、ForceHarness文中项目页404。因此来源检查不完整，不写成“当天没有其他资讯”，不声称所有权重和代码都已发布可用。
-
-本期所有性能数值均为作者报告；未进行训练复现或真实机器人实验。README由同一期日报确定性生成，保持原文、精读索引与历史归档入口。
+所有性能和成功率为作者报告，本次未进行机器人实验或训练复现。日报及精读已在本地生成；发布状态以运行结果为准，不能把本地文件存在视为已到达远程。
 
 ---
 
@@ -231,6 +217,7 @@
 
 | 日期 | 日报 | 精读 |
 | --- | --- | --- |
+| 2026-11-17 | [日报](news/2026-11-17.md) | [4 篇](paper-reading/news/2026-11-17/README.md) |
 | 2026-11-16 | [日报](news/2026-11-16.md) | [4 篇](paper-reading/news/2026-11-16/README.md) |
 | 2026-11-15 | [日报](news/2026-11-15.md) | — |
 | 2026-11-14 | [日报](news/2026-11-14.md) | [2 篇](paper-reading/news/2026-11-14/README.md) |
