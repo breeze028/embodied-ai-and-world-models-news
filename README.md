@@ -2,214 +2,182 @@
 
 > 具身智能与世界模型每日研究动态与论文精读。
 
-**最新一期：2026-11-17** ｜ [日报原文](news/2026-11-17.md) · [精读索引](paper-reading/news/2026-11-17/README.md) · [历史归档](#历史归档)
+**最新一期：2026-11-18** ｜ [日报原文](news/2026-11-18.md) · [精读索引](paper-reading/news/2026-11-18/README.md) · [历史归档](#历史归档)
 
 ---
 
-<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-17.md 自动镜像，请勿手工编辑 -->
+<!-- 本段由 codex-deployment/update_readme.py 从 news/2026-11-18.md 自动镜像，请勿手工编辑 -->
 
-## 2026-11-17 Embodied AI & World Models Daily
+## 2026-11-18 Embodied AI & World Models Daily
 
-> 面向具身智能 / Robotics 研究员与工程师。主窗口为北京时间11月17日，补充窗口15—16日。本期3篇必读、9篇雷达、4篇已完成精读。PI、Hugging Face等来源检查不完整，不能据此断言全天没有其他资讯。
+> 面向具身智能 / Robotics 研究员与工程师的研究与工程资讯。
+> 主窗口：北京时间 2026-11-18 00:00–23:59；补充窗口：11 月 16–17 日。所有论文日期按首次提交时间换算，不按公告日归属。
+> **来源检查不完整：** 本次取得的 arXiv recent/new 官方列表最新公告仍为 11 月 18 日；针对完整主窗口的官方 API 返回 95 条，其最新实际提交仅到北京时间 18 日 02:56:09。无法确认此后时段的索引覆盖，不将其解释为当天没有其他资讯。Physical Intelligence 返回 429，Hugging Face 机构模型列表与 TCP4D 权重入口超时。本期先发布已核实内容；下述研究结论均区分全文精读与摘要核实。
 
 ### 🔥 今日必读
 
-#### 1. 【VLA与基础模型】ScaleVLA：把552B冻结表示直接接到连续动作头
+#### 1. 【Sim-to-Real · 实时控制】Magflow：用可微电磁仿真训练4kHz磁悬浮控制器
 
-**来源：** [arXiv:2611.21607v1](https://arxiv.org/abs/2611.21607v1)（cs.RO；清华、北大、上海交大、Galbot）  
+**来源：** [arXiv:2611.23050v1](https://arxiv.org/abs/2611.23050v1)（cs.RO；Bielefeld University / Fraunhofer IOSB-INA）  
 **类型：** Paper  
-**发布时间：** arXiv v1北京时间2026-11-17 02:59  
-**评分：** 88.45/100  
-**关键词：** Frozen VLM · Flow Matching · Scaling
+**发布时间：** 2026-11-18 00:46:26（北京时间，首次 arXiv 提交；论文已标注 RA-L 接受）  
+**评分：** 88.5/100（89、88 两次评分均值）  
+**关键词：** Differentiable Simulation · Magnetic Levitation · Sim-to-Real
 
-**一句话：** 在保持动作DiT、初始化和监督预算相同的比较中，将VLM表示扩到552B；不生成文字推理，只运行因果编码器并将特征映射为动作片段。
+**一句话：** 将磁场、线圈受力、传感器和刚体运动构成可微闭环，离线训练 GRU 直接由霍尔读数生成电流；对应真实工业平台无需真实轨迹微调，实现新的磁体运动范围。
 
-![ScaleVLA表示到动作的接口](paper-reading/news/2026-11-17/scalevla/images/page_004_fig_figure_2_review.png)
+![Magflow 可微闭环与真实磁悬浮平台](paper-reading/news/2026-11-18/magflow/images/page_001_fig_fig_1_review_repair1.png)
 
 **技术要点：**
 
-- 冻结DeepSeek-V4.1-Flash-1017骨干，在编码器—解码器接口读出；适配器和32层动作DiT从零训练，四步flow积分复用一次骨干特征。MoE总参数不等于每token激活量，也不等于完整552B计算图都执行。
-- LIBERO四套件96.1%；LIBERO-PRO45.1%，对比小骨干最佳31.3%。Goal10示范87.8%超过2B用50示范85.6%，但归一化统计仍来自全量训练数据，固定5000步也不是收敛后或等总算力比较。
-- 真机插头参考布局9/10、空间扰动8/15，对比2B的4/10、5/15；只有一个训练种子，π0.5参考为8/10、7/15，小样本不能宣称稳定显著优于后者。
-- RoboCasa四H200中位215.8ms/片段，对比2B单H200114.7ms；真实机器人384ms/片段。计时和成功率使用不同部署路径，未逐元素验证特征一致，不能把216ms直接当真机延迟。
+- 定子离散为 130368 个导线段；固定姿态下六维力/力矩与 72 维电流呈线性关系，利用这一结构计算精确电流梯度，并降低反传成本。
+- 四层 GRU 读取 150 维霍尔观测，输出 24 组二维 Clarke 电流。500 步截断反传覆盖 125 ms；每种磁体/运动设置分别训练，单 A40 每个控制器约五天。
+- 单 CPU 核最坏推理 242 微秒，处于 250 微秒周期内。APM 实现离中心圆轨迹上的 360 度偏航，并展示普通条形磁体六维控制；翻滚时偶尔接触 tile，不能描述为始终无接触。
+- **代价明确：** 60 秒随机轨迹中 x/y/z RMS 为 0.34/0.30/0.14 mm，专有控制为 0.09/0.07/0.06 mm。扩展可控范围不等于精度全面领先；1.3 kg 是悬浮演示，未建立动态额定载荷。
 
-**为什么值得关注：** 强表示可能减少机器人监督需求，并改善精密插接；但应把模型家族、输入量、优化预算和硬件拆开，再判断规模本身的作用。
+**为什么值得关注：** 它把高成本物理模型留在训练侧，展示工业实时约束下从模拟学习电流控制的路径。值得迁移的是物理结构、动作表示与安全损失的配合；当前证据仍限单 tile、单 mover，换磁体需要重新训练。
 
-**资源：** [Paper](https://arxiv.org/abs/2611.21607v1) · [项目页](https://galaxygeneralrobotics.github.io/scalevla/) · [项目列出的代码](https://github.com/GalaxyGeneralRobotics/ScaleVLA) · [全文精读](paper-reading/news/2026-11-17/scalevla/scalevla.md)。未验证独立训练复现或权重可下载性。
+**资源：** [论文与 PDF](https://arxiv.org/abs/2611.23050v1) · [项目页](https://sites.google.com/view/magflow) · [全文精读](paper-reading/news/2026-11-18/magflow/magflow.md)。论文声称提供源码和视频，本次未核实到可确认对应的公开代码仓库与权重，不以同名仓库替代。
 
-#### 2. 【世界模型】DreamFAR：用接触变化选关键帧，减缓分钟级视频展开遗忘
+#### 2. 【Manipulation · 跨本体数据】TCP4D：用工具中心点连接视频跟踪、动作生成和数据增强
 
-**来源：** [arXiv:2611.22001v1](https://arxiv.org/abs/2611.22001v1)（cs.RO；Amazon FAR及合作高校）  
+**来源：** [arXiv:2611.23143v1](https://arxiv.org/abs/2611.23143v1)（cs.RO）  
 **类型：** Paper  
-**发布时间：** arXiv v1北京时间2026-11-17 07:31  
-**评分：** 86.95/100  
-**关键词：** Contact Memory · Streaming · Robot-Native Data
+**发布时间：** 2026-11-18 01:59:42（北京时间，首次提交）  
+**评分：** 87.5/100（89、86）  
+**关键词：** TCP Tracking · 4D Representation · Flow Matching · Cross-Embodiment
 
-**一句话：** 由模型预测接触建立/解除来写入关键帧，再按末端位姿检索；以固定长期槽和短期密集上下文保留离开视野后的交互状态。
+**一句话：** 在共享四维场景表征中恢复末端 SE(3) 轨迹与夹爪状态，再以历史 TCP 局部特征生成未来动作，并通过目标 URDF 与 IK 合成其他本体的演示。
 
-![DreamFAR接触记忆与流式生成](paper-reading/news/2026-11-17/dreamfar/images/page_003_fig_figure_2_review.png)
+![TCP4D 跟踪、动作生成与重定向流程](paper-reading/news/2026-11-18/tcp4d/images/page_004_fig_figure_2_review.png)
 
 **技术要点：**
 
-- 单位球潜变量限制尺度漂移，8帧长期记忆补充5秒近期历史，永久sink和滚动KV服务流式生成。16个在途帧提供10Hz吞吐，也引入16步、约1.6秒流水延迟；不能等同100ms动作反馈。
-- 主动力学1.9B，256H200训练六天；图像tokenizer使用预训练SSDD初始化。“无互联网视频动力学预训练”不等于所有模块完全从零。
-- 公共ABC公平比较另用约0.8B版本，与WEAVER等在同数据划分上训练。1000留出回合、15秒真实初始化后预测60秒，PSNR16.4dB，对比Cosmos15.8、WEAVER14.5、IWS11.0；视觉指标不等同精确接触物理。
-- 模拟与真实任务平均进度相关r=0.71仅来自三个任务×两个检查点的六个点，模型绝对进度偏乐观。单任务混合75真实+75模型示范达到63%进度，但相对75真实对照同时多了一倍数据，且只有10次实机试验。
+- 跟踪需要首帧二维 TCP 查询，骨干联合几何与 TCP 监督；生成器使用四帧历史局部特征、状态、语言和腕部视图，输出未来 32 步双臂动作。
+- DROID 原始米制 MPE 为 11.85 mm，允许真值 Sim(3) 对齐后的 ATE 为 7.60 mm；后者不能当作未经校准的绝对部署精度。
+- 跨本体增强 397/400=99.25% 指生成管线通过率。ARX 下游策略由增强数据单独训练的 30.5% 到联合数据的 72.0%，增加 **41.5 个百分点**；仅单训练种子，同 epoch 的更大数据集也增加更新预算。
+- RoboTwin 48 项任务干净测试 69.19%，随机测试仅 10.94%，另有两项完全遮挡任务未纳入。真实两任务各 30 次试验，成功率 83.33% 与 73.33%，平均 78.33%；这些结果不等于广泛 OOD 已解决。
 
-**为什么值得关注：** 接触事件可作为记忆写入的有意义边界，比固定间隔采帧更有针对性。模型内评测仍需真实硬件复核，不能成为唯一部署门槛。
+**为什么值得关注：** TCP 使视频标注、策略动作和跨本体增强拥有可检查的共同接口。真正采用时需逐项核对查询、外参、目标 IK 和图像修补；轨迹可恢复、数据可生成、闭环任务成功是三种不同验证。
 
-**资源：** [Paper](https://arxiv.org/abs/2611.22001v1) · [项目页](https://www.yimingdou.com/DreamFAR/) · [GitHub](https://github.com/amazon-far/dreamfar) · [全文精读](paper-reading/news/2026-11-17/dreamfar/dreamfar.md)。项目及仓库可访问，本次没有运行模型。
+**资源：** [论文](https://arxiv.org/abs/2611.23143v1) · [项目页](https://livioni.github.io/TCP4D/) · [Livioni/TCP4D](https://github.com/Livioni/TCP4D) · [Hugging Face 模型集合](https://huggingface.co/collections/HarrisonPENG/tcp-4d-models)（项目页给出，直连超时，未验证可下载性） · [全文精读](paper-reading/news/2026-11-18/tcp4d/tcp4d.md)。仓库身份已核实，未本地执行。
 
-#### 3. 【模仿学习与策略】ALOHA Lightning：高速直接示教，加同域遮罩和片段平滑
+#### 3. 【仿真基础设施】Genesis 1.4.7：修复非刚体耦合，并补齐确定性模式
 
-**来源：** [arXiv:2611.21919v1](https://arxiv.org/abs/2611.21919v1)（cs.RO；Stanford）  
-**类型：** Paper  
-**发布时间：** arXiv v1北京时间2026-11-17 05:31  
-**评分：** 86.35/100  
-**关键词：** Kinesthetic Teaching · ACT · Fast Manipulation
+**来源：** [官方 v1.4.7 Release](https://github.com/Genesis-Embodied-AI/genesis-world/releases/tag/v1.4.7)  
+**类型：** Engineering  
+**发布时间：** 2026-11-18 01:18:16（北京时间，Release 的 published_at）  
+**评分：** 80.5/100（80、81）  
+**关键词：** FEM · SPH · SAP Coupler · Determinism
 
-**一句话：** 人直接握住可反驱双臂末端采集高速动作，训练和部署都遮罩操作者区域，再通过重叠片段平滑维持快速、连续的执行。
-
-![随末端更新的遮罩示意](paper-reading/news/2026-11-17/aloha-lightning/images/page_002_fig_fig_3_review.png)
+**一句话：** 本次重点是非刚体求解和耦合的正确性、性能与可复现性，适合依赖软体、流体和接触训练的团队检查升级影响。
 
 **技术要点：**
 
-- 100Hz重力补偿、50Hz三视图及关节采集；ACT预测未来关节位置。操作者采集时有直接触感，不表示策略部署输入含触觉。
-- FK与标定确定人手臂区域，训练部署同样置零，减少视觉域偏移；相邻动作片段重叠，用sigmoid权重交接，避免每步推理与平均过时轨迹。
-- 每任务50示范，五项任务报告超过80%成功；拔杯3.97秒、电池5.70秒、收桌6.81秒、接抛球1.85秒。普通主从电池任务17.87秒，单纯加倍播放仍慢且精度下降。
-- 局限包括近手有效信息被遮掉、无触觉、专门硬件及有限工作台扰动。七人用户研究支持采集易上手，但不代表普适人因结论。
+- 官方称 `gs.init(use_deterministic_algorithms=True)` 下所有求解器均支持确定性，代价约 15% 速度下降；这不是本地实测。
+- 修复刚/软耦合接触力矩、FEM Newton 阈值与刚性/重场景提前终止、SPH 渗漏和黏性动量等问题，并使 SAP 接触刚度不依赖网格分辨率。
+- 支持任意长度运动链与不含第二关节的关节等式；官方报告部分批量 SPH 场景最高约 25% 加速，并减少若干可微 FEM/MPM 场景内存。
 
-**为什么值得关注：** 高速策略需要真实高速数据与执行机制配合，不能靠把慢策略控制频率翻倍获得。对采集流水线的改造可能比继续扩大策略网络更直接。
-
-**资源：** [Paper](https://arxiv.org/abs/2611.21919v1) · [项目页](https://flash-aloha.github.io/) · [项目列出的代码](https://github.com/JohnYao93/flash-aloha) · [全文精读](paper-reading/news/2026-11-17/aloha-lightning/aloha-lightning.md)。代表图选方法遮罩图，原文无统一全流程架构图。
+**为什么值得关注：** 升级可能改变此前有偏的接触行为及训练轨迹，值得固定旧版配置后回归核心任务；上述变更未在本机安装或跑性能比较。此工程事件不纳入论文精读。
 
 ### 📄 论文雷达
 
-#### 【VLA与基础模型】InteractVLA：让Agent用几何目标引导、检查和修补VLA动作
+除 RelayWAM 已读全文外，下列条目以核实后的官方摘要为证据，不冒充全文审查。所有时间均为 2026-11-18 北京时间。
 
-**来源：** [arXiv:2611.22584v1](https://arxiv.org/abs/2611.22584v1)  
-**发布时间：** 北京时间2026-11-17 19:07  
-**关键词：** Test-Time Guidance · Soft-Time Alignment · RSI  
-**核心贡献：** 冻结动作专家，对输入求梯度，将完整末端目标软匹配到合适执行步，并把动作与相机重投影反馈给Agent。LIBERO-Plus在线98.3%，加RSI后99.4%；RoboDojo对应26.0%与48.62%，不能混成同一预算。
+#### 【World-Action Model】RelayWAM：让未来可预测表征真正进入动作
 
-![InteractVLA软时间几何接口](paper-reading/news/2026-11-17/interactvla/images/page_002_fig_figure_2_review.png)
+**来源：** [arXiv:2611.22994v1](https://arxiv.org/abs/2611.22994v1) · 00:10:09  
+**关键词：** Predictive Representation · Action Interface · Future-Free Inference  
+**核心贡献：** 用线性探测和受控擦除区分“未来可解码”与“动作实际利用”，再沿第 14–29 层递归累计动作条件化过渡标记，将其作为 K/V 注入动作注意力。推理不生成未来帧，每步去噪重置过渡状态。
 
-**值得关注程度：** 84.65/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22584v1) · [GitHub](https://github.com/LingwuPro/InteractVLA) · [全文精读](paper-reading/news/2026-11-17/interactvla/interactvla.md)。真机表报告任务分数，不应转写为成功率；不同对照的练习预算与评测子集存在差异。
+![RelayWAM 深度递归过渡接口](paper-reading/news/2026-11-18/relaywam/images/page_006_fig_figure_4_review.png)
 
-#### 【运动与全身控制】Body Schema Policy：以运动学树组织视觉到动作接口
+**值得关注程度：** 85.5/100（86、85）。LIBERO-Plus 全回合加权 72.03%，FastWAM 51.50%；PRO 五轴平均 44.7%，但 Position 仅 1.4%。无未来监督的接口变体也明显提升，不能把全部收益归因预测信息；新增参数小于 0.6% 不等于延迟仅增 0.6%。真机为室内人工树、每条件 20 次。  
+**资源：** [论文](https://arxiv.org/abs/2611.22994v1) · [全文精读](paper-reading/news/2026-11-18/relaywam/relaywam.md)。未确认官方代码和权重。
 
-**来源：** [arXiv:2611.22713v1](https://arxiv.org/abs/2611.22713v1)  
-**发布时间：** 北京时间2026-11-17 20:52  
-**关键词：** Body Schema · Loco-Manipulation  
-**核心贡献：** 在关节/连杆token上学习螺旋运动，并由各身体部位查询视觉证据。作者报告九项G1仿真任务以少75倍参数匹配Ψ0并展示真实G1和Fetch；模型大小优势仍需结合具体任务与训练数据理解。  
-**值得关注程度：** 82.55/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22713v1)
+#### 【可变形仿真】RFW-S：把资产生成和独立物理验证分开
 
-#### 【数据与Benchmark】真实机器人数据质量：校准、可见信息和操作补偿会进入策略
+**来源：** [arXiv:2611.23056v1](https://arxiv.org/abs/2611.23056v1) · 00:49:52  
+**关键词：** Deformable Assets · Simulation Verification · Sim-to-Real  
+**核心贡献：** 摘要报告 83365 个日常可变形资产、485 类别与五类材料家族，利用自动物理参数校准，并在不同于校准的交互中独立验证。价值在于避免生成与验收共用同一任务；公开资产可用性及完整验证协议尚未全文核查。  
+**值得关注程度：** 81/100（82、80） · [Paper](https://arxiv.org/abs/2611.23056v1)
 
-**来源：** [arXiv:2611.22388v1](https://arxiv.org/abs/2611.22388v1)  
-**发布时间：** 北京时间2026-11-17 16:38  
-**关键词：** Teleoperation · Calibration · Data Quality  
-**核心贡献：** 结合25种双臂工作空间研究、遥操作控制和π0.5微调，报告策略保留约90%示范额外绕路，测试校准不匹配30次全失败。应优先测操作和标定系统，标题的大数据规模不等于所有结论都在该规模受控验证。  
-**值得关注程度：** 82.15/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22388v1)
+#### 【世界模型审计】ANYmal RWM：一步预测更好，策略未必能走
 
-#### 【运动与全身控制】Heave-Ho：从双人形训练到多机器人去中心协作
+**来源：** [arXiv:2611.23118v1](https://arxiv.org/abs/2611.23118v1) · 01:36:40  
+**关键词：** Learned Simulator · Calibration · Closed-Loop Evaluation  
+**核心贡献：** 摘要报告系统审计 learned simulator 的长时稳定性与控制用途：剪枝保留的一步精度与两秒稳定性可能脱钩，单步预测更好的微调模型也会训练出失败步态。涉及多个模型与变体，但当前任务域仍受限，不能外推所有世界模型无效。  
+**值得关注程度：** 81/100（82、80） · [Paper](https://arxiv.org/abs/2611.23118v1)
 
-**来源：** [arXiv:2611.22275v1](https://arxiv.org/abs/2611.22275v1)  
-**发布时间：** 北京时间2026-11-17 14:21  
-**关键词：** Multi-Agent · Tracking · Speech Coordination  
-**核心贡献：** 低层后训练跟踪基础模型以适应物理耦合，高层视觉语言规划配合语音领导—跟随同步。HH-Bench含12项、2—10机器人任务，作者展示异构团队及实机；语音协作不等于没有信息通信。  
-**值得关注程度：** 81.45/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22275v1)
+#### 【多机器人】用障碍函数引导扩散，组合异构团队能力
 
-#### 【模仿学习与策略】Progress Predicts Policy：让标量进度场的导数产生动作
+**来源：** [arXiv:2611.23149v1](https://arxiv.org/abs/2611.23149v1) · 02:03:24  
+**关键词：** Heterogeneous Teams · Barrier Functions · Diffusion Planning  
+**核心贡献：** 复用个体扩散轨迹先验，通过障碍约束引导组合异构团队的联合轨迹；摘要包含理论可行性条件、数值任务及真实多机器人验证。适用性依赖约束与采样假设，不能当作任意任务的无条件可行保证。  
+**值得关注程度：** 77.5/100（79、76） · [Paper](https://arxiv.org/abs/2611.23149v1)
 
-**来源：** [arXiv:2611.22491v1](https://arxiv.org/abs/2611.22491v1)  
-**发布时间：** 北京时间2026-11-17 17:46  
-**关键词：** Gradient Policy · World Model  
-**核心贡献：** 把语言条件潜在进度场与世界模型组合，在固定参考命令处读动作梯度，连续命令用正增益、离散命令用有限差分。用模仿与双重反传约束局部控制几何，不只拟合示范时间进度。  
-**值得关注程度：** 80.75/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22491v1)
+#### 【家庭机器人基准】PAIR：智能家居API没有替机器人完成抓取
 
-#### 【数据与Benchmark】HubEgo-100K：首版是10124小时职业技能视频
+**来源：** [arXiv:2611.23070v1](https://arxiv.org/abs/2611.23070v1) · 00:58:30  
+**关键词：** Smart Home · Manipulation · API-Physical Interaction  
+**核心贡献：** 将 Matter 设备 API 与面板交互接入共享状态，任务仍要求物理操作；摘要称两种微调 VLA 在 120 次运行中均未完整成功，主要失败来自基础导航与操作。具身执行与上层计划应分别诊断，oracle 条件下计划进度也不能当完整成功率。  
+**值得关注程度：** 77.5/100（79、76） · [Paper](https://arxiv.org/abs/2611.23070v1)
 
-**来源：** [arXiv:2611.21938v1](https://arxiv.org/abs/2611.21938v1)  
-**发布时间：** 北京时间2026-11-17 05:56  
-**关键词：** Egocentric Data · IMU · Skilled Work  
-**核心贡献：** v1.0含12227位贡献者、15548个环境、72754回合1080p视频和100Hz IMU，83%来自工作场景。100K是后续目标，不是当前已发布小时；动作语言为机器标注，尚待下游机器人基准验证。  
-**值得关注程度：** 79.05/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.21938v1)
+#### 【腿式控制】CADENCE：学习非周期落足，保留模型控制内层
 
-#### 【世界模型】ReLAP：在JEPA空间递归预测，预训练连续潜在动作
+**来源：** [arXiv:2611.23102v1](https://arxiv.org/abs/2611.23102v1) · 01:25:29  
+**关键词：** Acyclic Gaits · RL · Convex MPC  
+**核心贡献：** RL 在离散落足/保持选项和摆动时间上决策，内层继续使用凸 MPC，允许非周期步态适应碎片地形。摘要报告仿真多种子对照和控制后端迁移，后者还需重拟合接口；未核实到真机结果，不写成零适配实机迁移。  
+**值得关注程度：** 76.5/100（77、76） · [Paper](https://arxiv.org/abs/2611.23102v1)
 
-**来源：** [arXiv:2611.22077v1](https://arxiv.org/abs/2611.22077v1)  
-**发布时间：** 北京时间2026-11-17 09:56  
-**关键词：** Latent Action · Recurrent Prediction  
-**核心贡献：** 相邻观察逆动力学提取潜在动作，多步未来损失反传约束早期动作，再蒸馏给VLM并用机器人flow动作适配。部署去掉显式潜在动作/世界模型分支；作者报告11M样本下LIBERO97.9%、Plus70.0%。  
-**值得关注程度：** 78.75/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22077v1)
+#### 【高效世界模型】SpikWM：面向视觉规划的脉冲JEPA
 
-#### 【端侧部署】Anchored Path Matching：让学生轨迹上的端点与局部更新共同受监督
+**来源：** [arXiv:2611.22981v1](https://arxiv.org/abs/2611.22981v1) · 00:00:02  
+**关键词：** Spiking Neural Network · JEPA · Visual Planning  
+**核心贡献：** 用区域池化、双脉冲动作编码及因果膜状态组织潜在动力学，在 PushT、TwoRoom、Reacher 与 Cube 上验证规划。摘要的约 75.6% 能量节省来自算术能耗估计，不能写成部署硬件测得功耗下降。  
+**值得关注程度：** 73.5/100（75、72） · [Paper](https://arxiv.org/abs/2611.22981v1)
 
-**来源：** [arXiv:2611.22592v1](https://arxiv.org/abs/2611.22592v1)  
-**发布时间：** 北京时间2026-11-17 19:15  
-**关键词：** WAM · Distillation · Gradient Conflict  
-**核心贡献：** 从学生实际达到的状态续跑教师，提供零噪声端点和首个中间状态；冲突时优先保留端点梯度。同检查点支持1/2/4步，单步Clean/Random相对基础蒸馏提高2.0/1.4个百分点，最大时延倍数需保留八步教师参照。  
-**值得关注程度：** 77.65/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22592v1)
+#### 【意图推断】WoRD：用扩散模型在线更新目标后验
 
-#### 【数据与Benchmark】FailureGen：将已观察失败动作迁入新情景生成失败视频
-
-**来源：** [arXiv:2611.22367v1](https://arxiv.org/abs/2611.22367v1)  
-**发布时间：** 北京时间2026-11-17 16:21  
-**关键词：** Synthetic Failure · Cosmos · Evaluation  
-**核心贡献：** 微调动作条件Cosmos，标注失败供体和兼容宿主、迁移动作并过滤生成事件。初步检测实验AP从0.41到0.51，检出28/36到33/36；不是由任意动作生成物理真实失败的证明。  
-**值得关注程度：** 76.55/100  
-**Paper：** [arXiv摘要页](https://arxiv.org/abs/2611.22367v1)
-
-未精读的八条雷达基于官方摘要与版本页，数值保持作者口径，不标为全文实验已复核。全期评分均为编辑判断，而非独立复现的统计结论。
+**来源：** [arXiv:2611.23192v1](https://arxiv.org/abs/2611.23192v1) · 02:35:53  
+**关键词：** Goal Recognition · Diffusion · Posterior Inference  
+**核心贡献：** 为候选目标建立扩散轨迹分布，以温启动采样和梯度似然近似在线更新后验，面向早期轨迹含糊的目标识别。包含机器人等场景的通用推断用途，故未按纯自动驾驶工作排除；具体校准与运行成本仍待全文检查。  
+**值得关注程度：** 70/100（71、69） · [Paper](https://arxiv.org/abs/2611.23192v1)
 
 ### 🛠 工程与开源
 
-- **DreamFAR：** [官方仓库](https://github.com/amazon-far/dreamfar)创建于UTC16日21:37，即北京时间17日05:37，属于主窗口。与论文聚成同一事件，不重复计分。项目可作为训练、推理和交互示范入口；权重下载和运行速度本次未实测。
-- **InteractVLA：** [官方仓库](https://github.com/LingwuPro/InteractVLA)创建于UTC17日09:24，即北京时间17日17:24。可微动作专家与标定是接入条件，不能把任意黑盒VLA API直接变成可反传接口。
-- **版本排查：** [Genesis v1.4.7](https://github.com/Genesis-Embodied-AI/genesis-world/releases/tag/v1.4.7)是UTC17日17:18，即北京时间18日01:18，明确排除本期；其非刚体求解、耦合器和确定性修复留待18日报，不因UTC日期相同误收。MuJoCo、Isaac Lab、LeRobot查得的最近正式版本均早于本窗口。
+本期工程重点为上方的 [Genesis 1.4.7](https://github.com/Genesis-Embodied-AI/genesis-world/releases/tag/v1.4.7)，避免重复计数。TCP4D 的[官方仓库](https://github.com/Livioni/TCP4D)已由作者项目页与仓库元数据交叉确认；权重集合由项目页链接，但直连超时，未验证下载、许可与运行结果。Magflow 同名仓库搜索有大量无关项目，未将其当官方代码。
 
 ### 💬 社区信号
 
-已检查Hacker News和GitHub新建仓库线索，尚未确认可单列的独立复现、技术争议或多源集中讨论。作者仓库与项目页只证明资源入口，不等于社区验证；不把少量星标作为研究热度证据。
+本次 GitHub 新建仓库检索与 Hacker News 广义/论文名扩展检索，未取得足以确认上述事件已形成集中技术讨论的证据；名称检索有历史或无关命中，不用于抬高热度分。没有据此推断全社区无人讨论。后续值得观察的是 RWM 审计能否形成独立复现，以及 Genesis 接触修复是否改变既有策略行为；这两点目前只是跟踪问题。
 
 ### 🔎 补充窗口筛选记录
 
-以下按v1实际北京时间归属，不把公告日或UTC日期直接当发布日期：
+以下首次提交均在补充窗口内，已在 17 日刊发布，故本期不重复当作新事件：
 
-- [arXiv:2611.20452v1](https://arxiv.org/abs/2611.20452v1)，2026-11-16 11:22：11月16日报已精读XMimic/XSoma，按同一事件去重。
+| 论文 | 实际首次提交（北京时间） | 排除原因 |
+| --- | --- | --- |
+| [ScaleVLA，arXiv:2611.21607v1](https://arxiv.org/abs/2611.21607v1) | 11-17 02:59:37 | 已发布并精读，无已核实的重要新版本 |
+| [ALOHA Lightning，arXiv:2611.21919v1](https://arxiv.org/abs/2611.21919v1) | 11-17 05:31:18 | 同上 |
+| [DreamFAR，arXiv:2611.22001v1](https://arxiv.org/abs/2611.22001v1) | 11-17 07:31:41 | 同上 |
+| [InteractVLA，arXiv:2611.22584v1](https://arxiv.org/abs/2611.22584v1) | 11-17 19:07:45 | 同上 |
 
-- [arXiv:2611.21258v1](https://arxiv.org/abs/2611.21258v1)，2026-11-16 23:30：11月16日报已精读ThinkWAM，不因今天继续被讨论重发。
-
-- [arXiv:2611.21099v1](https://arxiv.org/abs/2611.21099v1)，2026-11-16 21:44：11月16日报已精读ForceHarness，本次未确认需独立收录的重大更新。
-
-- [arXiv:2611.20465v1](https://arxiv.org/abs/2611.20465v1)，2026-11-16 11:33：11月16日报已精读ReRead，不将普通资源变化假设成新论文。
-
-ScaleVLA在UTC16日提交但北京时间17日，昨日已明确留给本期，现已完成全文和附录精读。纯驾驶、纯SLAM、检测、零售预测、deepfake检测以及没有具身决策落点的软件Agent，不因标题包含World Model或Robot自动入选。
+主窗口另有 [DDPC，arXiv:2611.23215v1](https://arxiv.org/abs/2611.23215v1)（02:56:09，58分）、[触觉DLO，arXiv:2611.22990v1](https://arxiv.org/abs/2611.22990v1)（00:07:04，60.5分）与 [SMT/STL，arXiv:2611.23021v1](https://arxiv.org/abs/2611.23021v1)（00:27:56，60分），相关但未达 T1 的 62 分门槛。[Pressure Drop，arXiv:2611.23120v1](https://arxiv.org/abs/2611.23120v1)（01:38:28）以重力方向估计为主，未显示本任务要求的学习或决策创新；[驾驶状态，arXiv:2611.23211v1](https://arxiv.org/abs/2611.23211v1)（02:50:22）、[驾驶轨迹预测，arXiv:2611.23198v1](https://arxiv.org/abs/2611.23198v1)（02:38:28）和 [驾驶轨迹选择，arXiv:2611.22998v1](https://arxiv.org/abs/2611.22998v1)（00:12:55）未确认通用机器人方法贡献，预筛排除。
 
 ### 📊 今日技术趋势
 
-今天的主线分别从强表示、高速示范和交互记忆降低机器人控制难度。它们也暴露三种成本：大骨干的多卡推理、直接示教的硬件与域对齐，以及流式世界模型的反馈延迟和乐观偏差。判断实用性应同时看数据信息来源、真实任务完成时间与闭环评测，而不是只比较模型参数、FPS或视频质量。
+今天已核实工作共同提示，表示、接口和闭环执行应分别验证：未来可解码不等于策略利用，末端轨迹可生成不等于接触任务成功，单步仿真准确也未必产生稳定策略。Magflow 则展示相反方向的机会：把昂贵物理和约束放进训练，在极短部署周期中获得新的可控范围，但必须同时保留精度和功率代价。
 
-### 📚 精读与检索覆盖
+### 检索覆盖与精读状态
 
-已完成4篇：[精读索引](paper-reading/news/2026-11-17/README.md)。全文、附录覆盖和图像均经核对，证据规划、八项Final Note Lint、质量/可读性审查、正式保存与SHA一致性均通过；4张图物化，0占位。ALOHA代表图为遮罩方法示意，原文没有统一全流程架构图；关键结果和消融用笔记表格及正文解释。
+本次直接读取 [cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent) 官方 recent，以及当月列表作回溯；RO 月列表 1023 条，其他大分类月列表只取前 2000 条，不声称整月穷尽。官方 API 完整主窗口查询取得 95 条，但其最新实际投稿仍为 02:56:09；官方索引后续覆盖无法确认。
 
-- **官方列表：** 直接取得[cs.RO](https://arxiv.org/list/cs.RO/recent)、[cs.AI](https://arxiv.org/list/cs.AI/recent)、[cs.LG](https://arxiv.org/list/cs.LG/recent)、[cs.CV](https://arxiv.org/list/cs.CV/recent)recent及11月月列表，公告已覆盖18日。recent分别436、1420、1407、985条；月列表RO1023条，AI/LG/CV各取前2000条，不能声称后三类整月穷尽。
-- **时间核验：** 宽召回1170个去重候选，按v1北京时间为主窗口97、补充112、窗外961。已在上次取得的摘要/历史复用其固定v1时间，新ID重新请求；入选精读另由本次pipeline重新确定身份与PDF。该数量不是相关论文数量，也不表示1170篇全文都已阅读；普通修订和未确认更新不当新成果。
-- **筛选：** 按PASS/BLOCK/UNKNOWN、双次五维评分、事件聚簇和价值排序执行；研究论文权重4/3/2/1/0，T1门槛62。评分不靠机构名气或星标，全文复核限制已影响主文证据判断。正文只展示平均分，运行记录保留两次维度向量。
-- **机构与生态：** NVIDIA GEAR、DeepMind、Skild、1X、Figure、RAI、TRI、Stanford、Berkeley、MIT、CMU、上海AI实验室、Unitree、Deep Robotics，以及CoRL/RSS/ICRA/IROS入口可访问；GitHub四组新建仓库与四个仿真/机器人生态版本源已检查。入口可访问不证明全部渠道更新穷尽。
-- **明确缺口：** Physical Intelligence返回429；NVIDIA与LeRobot的Hugging Face模型接口超时。不能将来源不可访问描述为当天没有资讯，也不声称作者权重均已验证可下载。
+关键词宽召回去重后 1170 项，其中主窗口候选 17、补充窗口 171、窗口外 982；这是候选池数量，不是全文阅读数量。17 项主窗口候选已核对摘要和首次提交时间，PASS 项执行相同五维权重的两次编辑评分，按均值筛选；论文、项目页与代码合并为一个事件。三篇已完成全文精读，其他雷达仅摘要核实。
 
-所有性能和成功率为作者报告，本次未进行机器人实验或训练复现。日报及精读已在本地生成；发布状态以运行结果为准，不能把本地文件存在视为已到达远程。
+机构源检查涉及 GEAR、DeepMind、Skild、1X、Figure、RAI、TRI、Stanford、Berkeley、CMU、MIT、上海 AI 实验室、宇树、云深处，以及 CoRL/RSS/ICRA/IROS 和仿真器官方发布页。网页可达不等于这些机构所有入口已穷尽；PI 429、HF 超时与官方索引缺口均未解决，不能将本期称为完整自然日覆盖。
+
+[精读索引](paper-reading/news/2026-11-18/README.md)：Magflow、TCP4D、RelayWAM 三篇笔记已完成；每篇一张方法图通过视觉审查，均无占位图，Grounding、八项 lint、质量/可读性审查与正式保存 SHA 校验通过。
 
 ---
 
@@ -217,6 +185,7 @@ ScaleVLA在UTC16日提交但北京时间17日，昨日已明确留给本期，�
 
 | 日期 | 日报 | 精读 |
 | --- | --- | --- |
+| 2026-11-18 | [日报](news/2026-11-18.md) | [3 篇](paper-reading/news/2026-11-18/README.md) |
 | 2026-11-17 | [日报](news/2026-11-17.md) | [4 篇](paper-reading/news/2026-11-17/README.md) |
 | 2026-11-16 | [日报](news/2026-11-16.md) | [4 篇](paper-reading/news/2026-11-16/README.md) |
 | 2026-11-15 | [日报](news/2026-11-15.md) | — |
